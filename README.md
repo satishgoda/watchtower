@@ -51,3 +51,22 @@ static website. Follow the steps in "Populate with data" to provide Watchtower w
   * Update task assignations
   * Asset casting
 * Snapshotting (to compare the state of the edit/tasks over time)
+
+
+### JSON files data source
+
+Watchtower can run as a standalone application, and use JSON file as data source. In this case, here is how such data
+should be structured:
+
+- context.json (top level data)
+- static-projects (dir. contains a list of projects)
+  - <project_uuid> (dir. contains project data)
+    - sequences (dir. contains a list of sequences)
+      - <sequence_uuid> (dir. contains casting data for a sequence)
+        - casting.json
+    - assets.json
+    - edit.json
+    - edit.mp4
+    - project.json
+    - sequences.json
+    - shots.json
