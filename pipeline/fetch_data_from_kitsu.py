@@ -12,7 +12,7 @@ def get_env_data_as_dict(path: str) -> dict:
             in f.readlines() if not line.startswith('#'))
 
 
-env_vars = get_env_data_as_dict('.env.local')
+env_vars = get_env_data_as_dict('../.env.local')
 BASE_URL = env_vars['KITSU_DATA_SOURCE_URL']
 
 
@@ -53,7 +53,7 @@ def generate_preview_file_path(file_id: str) -> pathlib.Path:
     folder_one = file_id[:3]
     folder_two = file_id[3:6]
     filename = f'{file_id}.png'
-    return pathlib.Path('public') / 'static-previews' / folder_one / folder_two / filename
+    return pathlib.Path('../public') / 'static-previews' / folder_one / folder_two / filename
 
 
 def fetch_jwt() -> str:
@@ -133,7 +133,7 @@ def fetch_and_save_people_avatars():
 
     people = []
     for person in r_people.json():
-        dst = 'public/static-previews/placeholder-user.png'
+        dst = '../public/static-previews/placeholder-user.png'
         if person['has_avatar']:
             src = f"pictures/thumbnails/persons/{person['id']}.png"
             dst = f"public/static-previews/{src}"
@@ -230,7 +230,7 @@ def fetch_and_save_context():
     - task_types
     - task_status
     """
-    with open('public/context.json', 'w') as outfile:
+    with open('../public/context.json', 'w') as outfile:
         user_context = fetch_user_context()
         # Fetch project thumbnails
         for project in user_context['projects']:
