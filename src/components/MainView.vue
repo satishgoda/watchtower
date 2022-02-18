@@ -216,8 +216,12 @@ export default {
         .then(data => {
           // Setup data for Shots.
           for (let shot of data) {
-            // If the shot comes from Kitsu, we need to add some properties.
-            if (!dataurls.isStatic) {
+            if (dataurls.isStatic) {
+              if (shot.thumbnailUrl === null) {
+                shot.thumbnailUrl = 'static-previews/placeholder-asset.png'
+              }
+            } else {
+              // If the shot comes from Kitsu, we need to add some properties.
               shot.thumbnailUrl = `/api/pictures/thumbnails/preview-files/${shot.preview_file_id}.png`;
               shot.startFrame = shot.data.frame_in;
               shot.durationSeconds = (shot.data.frame_out - shot.data.frame_in) / this.fps;
@@ -235,7 +239,11 @@ export default {
         .then(data => {
           // Setup data for Assets.
           for (let asset of data) {
-            if (!dataurls.isStatic) {
+            if (dataurls.isStatic) {
+              if (asset.thumbnailUrl === null) {
+                asset.thumbnailUrl = 'static-previews/placeholder-asset.png'
+              }
+            } else {
               // If the shot comes from Kitsu, we need to add the thumbnailUrl property.
               asset.thumbnailUrl = `/api/pictures/thumbnails/preview-files/${asset.preview_file_id}.png`;
             }
@@ -249,6 +257,11 @@ export default {
       fetch(url)
         .then(response => response.json())
         .then(data => {
+          // If data is static, casting happens all in one file, so we
+          // have to look up the specific sequence.
+          if (dataurls.isStatic) {
+            data = data[sequenceId];
+          }
           // Index casting relations.
           // Object.entries(data.casting).forEach(([shotId, assets]) => {
           for (const [shotId, assets] of Object.entries(data)) {
@@ -269,6 +282,7 @@ export default {
                 break;
               }
             }
+
           }
         })
       .catch(err => {
@@ -331,8 +345,13 @@ export default {
                 name: filteredUser.full_name,
                 id: filteredUser.id,
                 color: filteredUser.color,
-                profilePicture: `static-previews/pictures/thumbnails/persons/${filteredUser.id}.png`
+                profilePicture: 'static-previews/placeholder-user.png'
               };
+
+              if (filteredUsers.has_avatar) {
+                user.profilePicture = user.thumbnailUrl;
+              }
+
               processedUsers.push(user);
             }
             this.users = processedUsers;
@@ -355,7 +374,7 @@ export default {
           colors.batchConvertColorHexToRGB(data.task_status);
           this.taskStatuses = data.task_status;
 
-          this.users = data.persons;
+          this.users = data.users;
 
           this.fetchProjectData(projectId);
           this.fetchProjectSequences(projectId);

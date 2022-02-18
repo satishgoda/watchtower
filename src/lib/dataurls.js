@@ -7,7 +7,7 @@ export default {
     switch(name) {
       case 'context':
         return (this.isStatic ?
-          'context.json' :
+          'static-projects/context.json' :
           '/api/data/user/context');
 
       case 'project':
@@ -32,7 +32,7 @@ export default {
 
       case 'casting':
         return this.isStatic ?
-           `static-projects/${projectId}/sequences/${sequenceId}/casting.json` :
+           `static-projects/${projectId}/casting.json` :
            `/api/data/projects/${projectId}/sequences/${sequenceId}/casting`
 
     }
