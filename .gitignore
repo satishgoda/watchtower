@@ -28,3 +28,4 @@ pnpm-debug.log*
 /public/static/projects/*
 /public/context.json
 /pipeline/dist/
+/pipeline/dist_watchtower/

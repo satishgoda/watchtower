@@ -5,6 +5,7 @@ description = "Utilities to generate static data for Watchtower."
 authors = ["Francesco Siddi <francesco@blender.org>"]
 license = "GPL-3.0-or-later"
 readme = "README.md"
+include = ["dist_watchtower/*", "dist_watchtower/*/*",]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -23,3 +24,6 @@ build-backend = "poetry.core.masonry.api"
 line-length = 100
 target_version = ['py39']
 skip_string_normalization = true
+
+[tool.poetry.scripts]
+package-watchtower-vue = "scripts:package_watchtower_vue"
