@@ -69,7 +69,7 @@ class StaticPreviewMixin:
         dst_url = self.generate_preview_file_path(self.hash_filename(src_url))
         dst = BASE_PATH / 'public' / dst_url
         self.fetch_and_save_image(src_url, requests_headers, dst, force=force)
-        setattr(self, 'thumbnailUrl', f"/{str(dst_url)}")
+        setattr(self, 'thumbnailUrl', str(dst_url))
 
 
 @dataclass
