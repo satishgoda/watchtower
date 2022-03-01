@@ -8,7 +8,7 @@ from dataclasses import dataclass, asdict, field
 from typing import Any, Dict, List, TypedDict, Optional
 
 
-BASE_PATH = pathlib.Path(__file__).parent.parent.parent.absolute()
+BASE_PATH = pathlib.Path.cwd()
 
 logging.basicConfig(
     level=logging.INFO,
