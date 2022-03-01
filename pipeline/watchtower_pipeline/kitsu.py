@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-
-import sys
-import requests
+import argparse
 import logging
 import pathlib
+import requests
+import shutil
+import sys
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
@@ -296,7 +297,7 @@ class KitsuProjectWriter:
         )
 
 
-def fetch_and_save(dotenv='.env.local'):
+def fetch_and_save(dotenv='.env.local') -> pathlib.Path:
     config = Config(dotenv=dotenv)
 
     kitsu_client = KitsuClient(config=config)
@@ -308,8 +309,32 @@ def fetch_and_save(dotenv='.env.local'):
         project_writer.download_previews(kitsu_client.headers)
         project_writer.write_as_json()
 
-    logging.info(f"Data downloaded in 'public'")
+    static_path_dst = pathlib.Path().cwd().absolute() / 'public/static'
+    logging.info(f"Data downloaded in {static_path_dst}")
+    return static_path_dst
+
+
+def bundle_watchtower(static_path: pathlib.Path):
+    """Combine the embedded dist_watchtower with the static_path content."""
+    dist_watchtower_src = pathlib.Path(__file__).parent.parent / 'dist_watchtower'
+    dist_watchtower_dst = pathlib.Path().cwd() / 'watchtower'
+    shutil.copytree(dist_watchtower_src, dist_watchtower_dst, dirs_exist_ok=True)
+    shutil.copytree(static_path, dist_watchtower_dst, dirs_exist_ok=True)
+    shutil.rmtree(static_path)
+    logging.info(f"Watchtower bundle ready at {dist_watchtower_dst}")
+    logging.info(f"You can preview it with the following command:")
+    logging.info(f"\tpython -m http.server --directory {dist_watchtower_dst}")
+
+
+def main(args):
+    parser = argparse.ArgumentParser(description="Generate watchtower content.")
+    parser.add_argument("-b", "--bundle", action=argparse.BooleanOptionalAction)
+    args = parser.parse_args(args)
+
+    static_path = fetch_and_save()
+    if args.bundle:
+        bundle_watchtower(static_path)
 
 
 if __name__ == "__main__":
-    fetch_and_save()
+    main(sys.argv[1:])
