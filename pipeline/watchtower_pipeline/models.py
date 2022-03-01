@@ -2,6 +2,7 @@ import hashlib
 import logging
 import pathlib
 import requests
+from urllib.parse import urlparse
 import sys
 import uuid
 from dataclasses import dataclass, asdict, field
@@ -61,7 +62,9 @@ class StaticPreviewMixin:
         logging.debug(f"Downloading {self.name}, {src_url}")
         if not src_url:
             return
-        if src_url.startswith("/"):
+        result = urlparse(src_url)
+        if not all([result.scheme, result.netloc]):
+            logging.debug("Skipping local url. This file was already processed.")
             return
         dst_url = self.generate_preview_file_path(self.hash_filename(src_url))
         dst = BASE_PATH / 'public' / dst_url
