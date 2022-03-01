@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import logging
+import os
 import pathlib
 import requests
 import shutil
@@ -334,6 +335,7 @@ def main(args):
     if args.bundle:
         bundle_watchtower(static_path)
         shutil.rmtree(static_path)
+        os.rmdir(static_path)
 
 
 if __name__ == "__main__":
