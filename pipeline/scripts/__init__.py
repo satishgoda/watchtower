@@ -9,9 +9,6 @@ def package_watchtower_vue():
     project_root = pipeline_dir.parent.absolute()
     os.chdir(project_root)
     subprocess.call(['yarn', 'build'], stdout=subprocess.PIPE)
-    shutil.rmtree(project_root / 'dist/static/projects')
-    shutil.rmtree(project_root / 'dist/static/previews')
+    shutil.rmtree(project_root / 'dist/static/')
     shutil.move(project_root / 'dist', project_root / 'pipeline/dist_watchtower')
     os.chdir(pipeline_dir)
-
-
