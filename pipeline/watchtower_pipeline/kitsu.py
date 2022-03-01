@@ -319,8 +319,7 @@ def bundle_watchtower(static_path: pathlib.Path):
     dist_watchtower_src = pathlib.Path(__file__).parent.parent / 'dist_watchtower'
     dist_watchtower_dst = pathlib.Path().cwd() / 'watchtower'
     shutil.copytree(dist_watchtower_src, dist_watchtower_dst, dirs_exist_ok=True)
-    shutil.copytree(static_path, dist_watchtower_dst, dirs_exist_ok=True)
-    shutil.rmtree(static_path)
+    shutil.copytree(static_path.parent, dist_watchtower_dst, dirs_exist_ok=True)
     logging.info(f"Watchtower bundle ready at {dist_watchtower_dst}")
     logging.info(f"You can preview it with the following command:")
     logging.info(f"\tpython -m http.server --directory {dist_watchtower_dst}")
@@ -334,6 +333,7 @@ def main(args):
     static_path = fetch_and_save()
     if args.bundle:
         bundle_watchtower(static_path)
+        shutil.rmtree(static_path)
 
 
 if __name__ == "__main__":
