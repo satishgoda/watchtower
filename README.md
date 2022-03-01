@@ -12,7 +12,7 @@ assets used in it. All in the space of one screen.
 * Compatible with zou as data backend
 
 
-## Project setup
+## Development setup
 ```
 yarn install
 ```
@@ -22,11 +22,7 @@ Watchtower is a Vue application. It can be managed through the [vue-cli package]
 ### Populate with data
 
 * Have access to the API of a working Zou (and optionally Kitsu) installation
-* Create an `.env.local` file (see the example one) and set the required env variables
-* Run the `fetch_data_from_kitsu.py` script. The script will connect to a zou instance, query for the needed information 
-  and create a few files in the `public` directory: 
-  * `static-projects`: containing all the data required by watchtower
-  * `static-previews`: containing shot and asset thumbnails
+* Follow the instructions in `pipeline/README.md`
 * At this point it's possible to run Watchtower and check the status of your production
 * For each project it's currently necessary to manually place an `edit.mp4`file in `static-projects/<project-id>/`
 
@@ -61,12 +57,10 @@ should be structured:
 - context.json (top level data)
 - static-projects (dir. contains a list of projects)
   - <project_uuid> (dir. contains project data)
-    - sequences (dir. contains a list of sequences)
-      - <sequence_uuid> (dir. contains casting data for a sequence)
-        - casting.json
     - assets.json
+    - casting.json (dir. contains casting data for all sequences)
     - edit.json
-    - edit.mp4
+    - edit.mp4 (a copy of the latest edit)
     - project.json
     - sequences.json
     - shots.json
