@@ -24,7 +24,7 @@ pnpm-debug.log*
 *.paw
 /public/*.mkv
 /public/*.mp4
-/public/static-previews/*/*.png
-/public/static-projects/*
+/public/static/previews/*/*.png
+/public/static/projects/*
 /public/context.json
 /pipeline/dist/

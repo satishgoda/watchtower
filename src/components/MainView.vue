@@ -189,7 +189,7 @@ export default {
       this.initWithProject(value);
     },
     fetchProjectSequences: function (projectId) {
-      // let url = `static-projects/${projectId}/sequences.json`
+      // let url = `static/projects/${projectId}/sequences.json`
       let url = dataurls.getUrl('sequences', projectId)
       fetch(url)
         .then(response => response.json())
@@ -209,7 +209,7 @@ export default {
         })
     },
     fetchProjectShots: function (projectId) {
-      // let url = `static-projects/${projectId}/shots.json`
+      // let url = `static/projects/${projectId}/shots.json`
       let url = dataurls.getUrl('shots', projectId)
       fetch(url)
         .then(response => response.json())
@@ -218,7 +218,7 @@ export default {
           for (let shot of data) {
             if (dataurls.isStatic) {
               if (shot.thumbnailUrl === null) {
-                shot.thumbnailUrl = 'static-previews/placeholder-asset.png'
+                shot.thumbnailUrl = 'img/placeholder-asset.png'
               }
             } else {
               // If the shot comes from Kitsu, we need to add some properties.
@@ -241,7 +241,7 @@ export default {
           for (let asset of data) {
             if (dataurls.isStatic) {
               if (asset.thumbnailUrl === null) {
-                asset.thumbnailUrl = 'static-previews/placeholder-asset.png'
+                asset.thumbnailUrl = 'img/placeholder-asset.png'
               }
             } else {
               // If the shot comes from Kitsu, we need to add the thumbnailUrl property.
@@ -291,7 +291,7 @@ export default {
       })
     },
     fetchEditData: function (projectId) {
-      let urlEdit = `static-projects/${projectId}/edit.json`
+      let urlEdit = `static/projects/${projectId}/edit.json`
       fetch(urlEdit)
         .then(response => response.json())
         .then(data => {
@@ -345,7 +345,7 @@ export default {
                 name: filteredUser.full_name,
                 id: filteredUser.id,
                 color: filteredUser.color,
-                profilePicture: 'static-previews/placeholder-user.png'
+                profilePicture: 'img/placeholder-user.png'
               };
 
               if (filteredUsers.has_avatar) {

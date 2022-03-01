@@ -38,7 +38,7 @@ class StaticPreviewMixin:
         - 0a/30a32d425-6723-4f2b-baf7-2a6d457fa669.png
         """
         filename = f'{file_id}.png'
-        return pathlib.Path('static-previews') / file_id[:2] / filename
+        return pathlib.Path('static/previews') / file_id[:2] / filename
 
     @staticmethod
     def fetch_and_save_image(src_url, headers, dst: pathlib.Path, force=False):
@@ -224,7 +224,7 @@ class Edit:
 
     def __post_init__(self):
         if not self.sourceName:
-            self.sourceName = f"/static-projects/{self.project.id}/edit.mp4"
+            self.sourceName = f"/static/projects/{self.project.id}/edit.mp4"
 
     def to_dict(self) -> Dict[str, Any]:
         return {

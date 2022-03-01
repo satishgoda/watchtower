@@ -32,7 +32,7 @@ class ContextWriter:
             p.download_and_assign_thumbnail(requests_headers=requests_headers, force=force)
 
     def write_as_json(self):
-        dst = models.BASE_PATH / 'public/static-projects/context.json'
+        dst = models.BASE_PATH / 'public/static/projects/context.json'
         dst.parent.mkdir(parents=True, exist_ok=True)
         with open(dst, 'w') as outfile:
             json.dump(self.to_dict(), outfile, indent=2)
@@ -50,7 +50,7 @@ class ProjectWriter:
     casting: Dict[str, models.SequenceCasting]
 
     def dump_data(self, name, data):
-        dst = models.BASE_PATH / f"public/static-projects/{self.project.id}/{name}.json"
+        dst = models.BASE_PATH / f"public/static/projects/{self.project.id}/{name}.json"
         dst.parent.mkdir(parents=True, exist_ok=True)
         with open(dst, 'w') as outfile:
             json.dump(data, outfile, indent=2)
