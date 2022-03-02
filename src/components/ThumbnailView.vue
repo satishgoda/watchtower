@@ -65,10 +65,10 @@
 
 <script>
 
-import {UIRenderer, UILayout} from "uirenderer-canvas";
+import {UIRenderer, UILayout} from 'uirenderer-canvas';
 
 export default {
-  name: "ThumbnailView",
+  name: 'ThumbnailView',
   props: {
     taskTypes: Array,
     taskStatuses: Array,
@@ -107,7 +107,7 @@ export default {
       duplicatedThumbs: [], // Keep track of thumbnails that represent the same shot (because it shows in multiple groups).
       // Grouped view.
       thumbGroups: [], // Display info for groups. List of UILayout.ThumbnailGroup.
-      summaryText: { str: "", pos: [], }, // Heading with aggregated information of the displayed groups.
+      summaryText: { str: '', pos: [], }, // Heading with aggregated information of the displayed groups.
       // Assignees.
       usersTexBundleID: null, // Rendering context texture ID for the packed user avatar images.
       // Interaction.
@@ -210,7 +210,7 @@ export default {
       this.draw();
     },
     timelineVisibleFrames: function () {
-      if (this.seqFilterMode === "showShotsInTimelineView") {
+      if (this.seqFilterMode === 'showShotsInTimelineView') {
         this.refreshAndDraw();
       }
     },
@@ -221,7 +221,7 @@ export default {
       this.refreshAndDraw();
     },
     users: function () {
-      console.log("Thumbnail View: Loading " + this.users.length + " users")
+      console.log('Thumbnail View: Loading ' + this.users.length + ' users')
 
       if (this.users.length) {
         const thumb_size = [400, 400]; // WIP
@@ -238,7 +238,7 @@ export default {
       this.refreshAndDraw();
     },
     shots: function () {
-      console.log("Thumbnail View: Loading " + this.shots.length + " shots")
+      console.log('Thumbnail View: Loading ' + this.shots.length + ' shots')
 
       if (this.shots.length) {
         const thumb_size = [150, 100] ; // [1920, 1080];// WIP
@@ -254,7 +254,7 @@ export default {
       this.refreshAndDraw();
     },
     assets: function () {
-      console.log("Thumbnail View: Loading " + this.assets.length + " assets")
+      console.log('Thumbnail View: Loading ' + this.assets.length + ' assets')
 
       if (this.assets.length) {
         const thumb_size = [150, 100]; // WIP
@@ -281,7 +281,7 @@ export default {
       this.activeSequence = currSequence;
 
       // Re-layout if the change in current scene affects the filtering.
-      if (previouslyCurrSequence !== currSequence && this.seqFilterMode === "showActiveSequence") {
+      if (previouslyCurrSequence !== currSequence && this.seqFilterMode === 'showActiveSequence') {
         this.refreshAndDraw();
       } else if (previouslyCurrShot !== this.activeShot) {
         // Update current frame or casting highlights.
@@ -293,7 +293,7 @@ export default {
     },
   },
   mounted: function () {
-    console.log("Thumbnail View: Initializing...");
+    console.log('Thumbnail View: Initializing...');
     this.initCanvas();
 
     // Note: Image loading, if any, should go here.
@@ -318,7 +318,7 @@ export default {
     resizeCanvas: function (shouldDraw = true) {
       const canvasContainer = document.getElementById('canvas-thumb-grid-container');
       const positionOffset = 436;
-      canvasContainer.style.height = window.innerHeight - positionOffset + "px";
+      canvasContainer.style.height = window.innerHeight - positionOffset + 'px';
       this.canvas.width = canvasContainer.offsetWidth;
       this.canvas.height = canvasContainer.offsetHeight - 50;
 
@@ -336,7 +336,7 @@ export default {
       this.uiRenderer = new UIRenderer(this.canvas, this.draw);
 
       this.canvasText = document.getElementById('canvas-thumb-grid-text');
-      this.ui2D = this.canvasText.getContext("2d");
+      this.ui2D = this.canvasText.getContext('2d');
 
       // Resize the canvas to fill browser window dynamically
       window.addEventListener('resize', this.resizeCanvas, false);
@@ -360,10 +360,10 @@ export default {
       // Setup style for the text rendering in the overlaid canvas for text.
       const fontSize = this.uiConfig.fontSize;
       this.ui2D.clearRect(0, 0, this.canvasText.width, this.canvasText.height);
-      this.ui2D.fillStyle = "rgb(220, 220, 220)";
-      this.ui2D.font = fontSize + "px sans-serif";
-      this.ui2D.textAlign = "left";
-      this.ui2D.textBaseline = "top";
+      this.ui2D.fillStyle = 'rgb(220, 220, 220)';
+      this.ui2D.font = fontSize + 'px sans-serif';
+      this.ui2D.textAlign = 'left';
+      this.ui2D.textBaseline = 'top';
       this.ui2D.shadowOffsetX = 2;
       this.ui2D.shadowOffsetY = 2;
       this.ui2D.shadowBlur = 2;
@@ -373,21 +373,21 @@ export default {
       let hasProblemMsg = null;
       const thumbSize = this.thumbnailSize;
       if (!this.shots.length && this.mode === 'shots') {
-        hasProblemMsg = "No shots loaded";
+        hasProblemMsg = 'No shots loaded';
       } else if (!this.assets.length && this.mode === 'assets') {
-        hasProblemMsg = "No assets loaded";
+        hasProblemMsg = 'No assets loaded';
       } else if (thumbSize[0] <= 5 || thumbSize[1] <= 5) {
-        hasProblemMsg = "Out of space";
+        hasProblemMsg = 'Out of space';
       } else if (Number.isNaN(thumbSize[0]) || Number.isNaN(thumbSize[1])) {
-        hasProblemMsg = "Missing layout pass";
-      } else if (this.seqFilterMode === "showActiveSequence" && !this.activeSequence) {
-        hasProblemMsg = "No sequence selected";
+        hasProblemMsg = 'Missing layout pass';
+      } else if (this.seqFilterMode === 'showActiveSequence' && !this.activeSequence) {
+        hasProblemMsg = 'No sequence selected';
       }
 
       if (hasProblemMsg) {
         // Show a user message indicating why the view is empty
-        this.ui2D.textAlign = "center";
-        this.ui2D.textBaseline = "middle";
+        this.ui2D.textAlign = 'center';
+        this.ui2D.textBaseline = 'middle';
         this.ui2D.fillText(hasProblemMsg, this.canvasText.width * 0.5, this.canvasText.height * 0.5);
         ui.draw();
         return;
@@ -403,11 +403,11 @@ export default {
       // Check if there is enough space to show shot names
       const thumbInfoSpacing = this.uiConfig.thumbOverlayInfo.textPad;
       const textHeightOffset = thumbSize[1] - fontSize - thumbInfoSpacing;
-      const widthForInfo = thumbSize[0] - (this.ui2D.measureText("..").width + thumbInfoSpacing * 2);
+      const widthForInfo = thumbSize[0] - (this.ui2D.measureText('..').width + thumbInfoSpacing * 2);
       let infoMode = 0;
       if (this.mode === 'shots') {
-        const widthForShotName = this.ui2D.measureText("010_0010_A").width; // Sample shot name
-        const widthForExtras =  this.ui2D.measureText(" - 15.5s").width; // Example
+        const widthForShotName = this.ui2D.measureText('010_0010_A').width; // Sample shot name
+        const widthForExtras =  this.ui2D.measureText(' - 15.5s').width; // Example
         if (widthForInfo > widthForShotName) { infoMode = 1; }
         if (widthForInfo > (widthForShotName + widthForExtras)) { infoMode = 2; }
       } else {
@@ -416,15 +416,15 @@ export default {
       if (infoMode > 0) {
         for (const thumb of this.thumbnails) {
           let info = thumb.obj.name
-            + (this.duplicatedThumbs[thumb.objIdx] ? "**" : "")
-            + (infoMode === 2 ? " - " + thumb.obj.durationSeconds.toFixed(1) + "s" : "");
+            + (this.duplicatedThumbs[thumb.objIdx] ? '**' : '')
+            + (infoMode === 2 ? ' - ' + thumb.obj.durationSeconds.toFixed(1) + 's' : '');
           if (infoMode === 3) {
             const uncroppedInfo = info;
             while (this.ui2D.measureText(info).width > widthForInfo) {
               info = info.slice(0, -1);
             }
             if (info !== uncroppedInfo) {
-              info += "..";
+              info += '..';
             }
           }
 
@@ -439,11 +439,11 @@ export default {
       }
 
       // Draw task information.
-      if (this.taskTypeFilter !== "") {
+      if (this.taskTypeFilter !== '') {
 
         // Get the task type. e.g. "Animation".
         const taskType = this.currTaskType;
-        if (!taskType) { console.error("Selected task type not found in data."); return; }
+        if (!taskType) { console.error('Selected task type not found in data.'); return; }
 
         // Draw task statuses.
         if (this.showStatuses) {
@@ -458,7 +458,7 @@ export default {
             // Draw if the dots are not too big relative to the thumb size.
             ((thumbSize[0] * thumbDotRatio > statusRadius * 2) || this.statusDispMode !== 'dots')
             // Don't draw if the view is grouped by status, since it would be duplicated information.
-            && this.displayMode !== "groupByTaskStatus";
+            && this.displayMode !== 'groupByTaskStatus';
           if (shouldDrawStatuses) {
             const offsetW = thumbSize[0] - statusRadius - statusOffsetX;
             const offsetH = thumbSize[1] - statusRadius - statusOffsetY;
@@ -566,7 +566,7 @@ export default {
       }
 
       // Draw grouping.
-      if (this.displayMode !== "chronological") {
+      if (this.displayMode !== 'chronological') {
 
         // Draw the aggregated group information.
         if (this.summaryText.str) {
@@ -592,7 +592,7 @@ export default {
     getFilteredShots: function () {
           // Find which shots to filter by.
           let filtered_shots = [];
-          if (this.seqFilterMode === "showActiveSequence") {
+          if (this.seqFilterMode === 'showActiveSequence') {
             // Get the shots associated with the active sequence.
             if (this.activeSequence) {
               for (const shot of this.shots) {
@@ -601,7 +601,7 @@ export default {
                 }
               }
             }
-          } else if (this.seqFilterMode === "showShotsInTimelineView") {
+          } else if (this.seqFilterMode === 'showShotsInTimelineView') {
             // Get the shots that are visible in the timeline.
             for (const shot of this.shots) {
               const lastShotFrame = shot.startFrame + shot.durationSeconds * this.fps;
@@ -622,7 +622,7 @@ export default {
       if (this.mode === 'shots') {
 
         // Create a thumbnail for each shot to be shown.
-        if (this.seqFilterMode === "showActiveSequence") {
+        if (this.seqFilterMode === 'showActiveSequence') {
           if (this.activeSequence) {
             // Show the shots associated with the active sequence.
             for (let i = 0; i < this.shots.length; i++) {
@@ -632,7 +632,7 @@ export default {
               }
             }
           }
-        } else if (this.seqFilterMode === "showShotsInTimelineView") {
+        } else if (this.seqFilterMode === 'showShotsInTimelineView') {
           // Show only shots that are visible in the timeline.
           for (let i = 0; i < this.shots.length; i++) {
             const shot = this.shots[i];
@@ -689,17 +689,17 @@ export default {
 
       // Clear previous data.
       this.thumbGroups = [];
-      this.summaryText.str = "";
+      this.summaryText.str = '';
 
-      if (this.displayMode === "chronological") {
+      if (this.displayMode === 'chronological') {
         return;
       }
-      const groupBySequence = (this.displayMode === "groupBySequence");
-      const groupByAssetType = (this.displayMode === "groupByAssetType");
-      const groupByStatus = (this.displayMode === "groupByTaskStatus");
-      const groupByAssignee = (this.displayMode === "groupByAssignee");
+      const groupBySequence = (this.displayMode === 'groupBySequence');
+      const groupByAssetType = (this.displayMode === 'groupByAssetType');
+      const groupByStatus = (this.displayMode === 'groupByTaskStatus');
+      const groupByAssignee = (this.displayMode === 'groupByAssignee');
       if ((groupByStatus || groupByAssignee) && !this.currTaskType) {
-        console.error("Thumbnail View: can't group by task status/assignee when no task is set.");
+        console.error('Thumbnail View: can\'t group by task status/assignee when no task is set.');
         return;
       }
 
@@ -714,10 +714,10 @@ export default {
         thumbGroups.push(new UILayout.ThumbnailGroup(obj.name, obj.color, obj));
       }
       const unassignedGroup =
-        groupBySequence ? new UILayout.ThumbnailGroup("Unassigned", [0.8, 0.0, 0.0, 1.0]) :
-        groupByAssetType ? new UILayout.ThumbnailGroup("No Type", [0.8, 0.0, 0.0, 1.0]) :
-        groupByStatus ? new UILayout.ThumbnailGroup("No Status", [0.6, 0.6, 0.6, 1.0]) :
-        /* groupByAssignee */ new UILayout.ThumbnailGroup("Unassigned", [0.6, 0.6, 0.6, 1.0]);
+        groupBySequence ? new UILayout.ThumbnailGroup('Unassigned', [0.8, 0.0, 0.0, 1.0]) :
+        groupByAssetType ? new UILayout.ThumbnailGroup('No Type', [0.8, 0.0, 0.0, 1.0]) :
+        groupByStatus ? new UILayout.ThumbnailGroup('No Status', [0.6, 0.6, 0.6, 1.0]) :
+        /* groupByAssignee */ new UILayout.ThumbnailGroup('Unassigned', [0.6, 0.6, 0.6, 1.0]);
 
       // Assign thumbnails to groups.
       const objBelongsToGroup =
@@ -800,10 +800,10 @@ export default {
           for (const thumbIdx of group.thumbIdxs) {
             durationInSeconds += this.thumbnails[thumbIdx].obj.durationSeconds;
           }
-          group.name += " (shots: " + group.thumbIdxs.length + ",  "
-                        + secToStr(durationInSeconds) + ")";
+          group.name += ' (shots: ' + group.thumbIdxs.length + ',  '
+                        + secToStr(durationInSeconds) + ')';
         } else {
-          group.name += " (" + group.thumbIdxs.length + ")";
+          group.name += ' (' + group.thumbIdxs.length + ')';
         }
 
         // Calculate the aggregated stats of the shots/assets in view.
@@ -814,8 +814,8 @@ export default {
       // Set the aggregated display information if there are multiple groups.
       if (this.thumbGroups.length > 1) {
         this.summaryText.str = (this.mode === 'shots') ?
-          "Total shots in view: " + totalObjs + ", duration: " + secToStr(totalDuration) :
-          "Total assets in view: " + totalObjs;
+          'Total shots in view: ' + totalObjs + ', duration: ' + secToStr(totalDuration) :
+          'Total assets in view: ' + totalObjs;
       }
     },
 
@@ -829,7 +829,7 @@ export default {
         this.shotsOriginalImageSize :
         this.assetsOriginalImageSize;
 
-      if (this.displayMode === "chronological") {
+      if (this.displayMode === 'chronological') {
         this.thumbnailSize = UILayout.fitThumbsInGrid(
           this.thumbnails, originalImageSize, this.uiConfig, this.getCanvasRect());
       } else {
@@ -931,9 +931,9 @@ function secToStr(timeInSeconds) {
   const h = timeInSeconds / 3600;
   const m = (timeInSeconds / 60) % 60;
   const s = Math.round(timeInSeconds % 60);
-  let str = "";
-  if (h>1) str += h.toFixed(0) + ":";
-  str += m.toFixed(0) + ":";
+  let str = '';
+  if (h>1) str += h.toFixed(0) + ':';
+  str += m.toFixed(0) + ':';
   return str + s.toFixed(0).padStart(2, '0');
 }
 

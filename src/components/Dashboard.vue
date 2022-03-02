@@ -17,9 +17,9 @@
 </template>
 
 <script>
-import Toolbar from "@/components/Toolbar";
+import Toolbar from '@/components/Toolbar';
 export default {
-  name: "Dashboard",
+  name: 'Dashboard',
   components: {Toolbar},
   props: {
     currentUser: {type: Object,},

@@ -13,7 +13,7 @@
 import superagent from 'superagent'
 
 export default {
-  name: "LoginForm",
+  name: 'LoginForm',
   data () {
     return{
       email: '',
@@ -35,8 +35,8 @@ export default {
       agent
         .post('/api/auth/login')
         .send({
-          "email": this.email,
-          "password": this.password
+          'email': this.email,
+          'password': this.password
         })
         .end((err, res) => {
         if (err) {

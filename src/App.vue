@@ -6,7 +6,7 @@
 </template>
 <script>
 
-import dataurls from "@/lib/dataurls";
+import dataurls from '@/lib/dataurls';
 
 export default {
   name: 'App',

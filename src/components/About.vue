@@ -10,10 +10,10 @@
 </template>
 
 <script>
-import Toolbar from "@/components/Toolbar";
+import Toolbar from '@/components/Toolbar';
 
 export default {
-  name: "About",
+  name: 'About',
   components: {Toolbar},
   props: {
     currentUser: {type: Object,},

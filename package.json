@@ -41,7 +41,8 @@
     },
     "rules": {
       "no-unused-vars": "warn",
-      "vue/no-reserved-component-names": "error"
+      "vue/no-reserved-component-names": "error",
+      "quotes": ["error", "single"]
     }
   },
   "browserslist": [

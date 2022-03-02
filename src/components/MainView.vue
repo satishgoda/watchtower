@@ -88,16 +88,16 @@
 
 <script>
 
-import VideoPlayer from "@/components/VideoPlayer";
-import ThumbnailView from "@/components/ThumbnailView";
-import TimelineView from "@/components/TimelineView";
-import Toolbar from "@/components/Toolbar";
+import VideoPlayer from '@/components/VideoPlayer';
+import ThumbnailView from '@/components/ThumbnailView';
+import TimelineView from '@/components/TimelineView';
+import Toolbar from '@/components/Toolbar';
 
 import colors from '@/lib/colors'
-import dataurls from "@/lib/dataurls";
+import dataurls from '@/lib/dataurls';
 
 export default {
-  name: "MainView",
+  name: 'MainView',
   components: {
     VideoPlayer,
     ThumbnailView,
@@ -180,7 +180,7 @@ export default {
       this.isPlaying = !this.isPlaying;
     },
     handleHotkey: function (event) {
-      if (event.isComposing || event.key === " ") {
+      if (event.isComposing || event.key === ' ') {
         this.togglePlayback();
       }
     },
@@ -384,7 +384,7 @@ export default {
         })
     },
     uiCurrentSequenceColor: function (color) {
-      let [r, g, b, a] = color;
+      let [r, g, b] = color;
       r = r * 100;
       g = g * 100;
       b = b * 100;

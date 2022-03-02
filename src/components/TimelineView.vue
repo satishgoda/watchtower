@@ -31,7 +31,7 @@
 import { UIRenderer } from 'uirenderer-canvas';
 
 export default {
-  name: "TimelineView",
+  name: 'TimelineView',
   props: {
     taskTypes: Array,
     taskStatuses: Array,
@@ -222,7 +222,7 @@ export default {
       this.uiRenderer = new UIRenderer(this.canvas, this.draw);
 
       this.canvasText = document.getElementById('canvas-timeline-text');
-      this.ui2D = this.canvasText.getContext("2d");
+      this.ui2D = this.canvasText.getContext('2d');
 
       // Resize the canvas to fill browser window dynamically
       window.addEventListener('resize', this.resizeCanvas, false);
@@ -233,7 +233,7 @@ export default {
     },
 
     updateChannelNamesWidth: function () {
-      let channelNamesWidth = this.ui2D.measureText("Sequences").width;
+      let channelNamesWidth = this.ui2D.measureText('Sequences').width;
       for (const task of this.taskTypesForShots) {
         channelNamesWidth = Math.max(channelNamesWidth, this.ui2D.measureText(task.name).width);
       }
@@ -252,10 +252,10 @@ export default {
       // Setup style for the text rendering in the overlaid canvas for text.
       const fontSize = this.uiConfig.fontSize;
       this.ui2D.clearRect(0, 0, this.canvasText.width, this.canvasText.height);
-      this.ui2D.fillStyle = "rgb(220, 220, 220)";
-      this.ui2D.font = fontSize + "px sans-serif";
-      this.ui2D.textAlign = "left";
-      this.ui2D.textBaseline = "top";
+      this.ui2D.fillStyle = 'rgb(220, 220, 220)';
+      this.ui2D.font = fontSize + 'px sans-serif';
+      this.ui2D.textAlign = 'left';
+      this.ui2D.textBaseline = 'top';
       this.ui2D.shadowOffsetX = 1;
       this.ui2D.shadowOffsetY = 1;
       this.ui2D.shadowBlur = 2;
@@ -365,7 +365,7 @@ export default {
 
       // Draw sequences
       const seqCorner = this.uiConfig.sequences.corner;
-      this.ui2D.font = seqFontSize + "px sans-serif";
+      this.ui2D.font = seqFontSize + 'px sans-serif';
       for (const sequence of this.sequences) {
         // Find continuous ranges of shots that belong to this sequence.
         // In theory, a sequence has a single contiguous range, but in practice,
@@ -380,20 +380,20 @@ export default {
           const clipL = Math.max(view.transformPosX(startPos[0]), view.left);
           const clipR = Math.min(view.transformPosX(startPos[0] + widths[0]), view.right);
           const clippedWidth = clipR - clipL;
-          const availableWidth = clippedWidth - seqTextPad.x * 2 - this.ui2D.measureText("..").width;
+          const availableWidth = clippedWidth - seqTextPad.x * 2 - this.ui2D.measureText('..').width;
           if (availableWidth > 0) {
             let name = sequence.name;
             while (this.ui2D.measureText(name).width > availableWidth) {
               name = name.slice(0, -1);
             }
             if (name !== sequence.name) {
-              name += "..";
+              name += '..';
             }
             this.ui2D.fillText(name, clipL + seqTextPad.x, seqTop - (seqFontSize + seqTextPad.bottom));
           }
         }
       }
-      this.ui2D.font = fontSize + "px sans-serif";
+      this.ui2D.font = fontSize + 'px sans-serif';
 
       ui.popView();
 
@@ -450,9 +450,9 @@ export default {
       const halfFontSize = fontSize / 2;
       const textX = margin.x + this.uiConfig.channels.namePadX;
       let textY = margin.top + Math.round(seqChannelHeight / 2) - halfFontSize;
-      this.ui2D.fillText("Sequences", textX, textY);
+      this.ui2D.fillText('Sequences', textX, textY);
       textY = shotChannelTop + Math.round(shotChannelHeight / 2) - halfFontSize;
-      this.ui2D.fillText("Shots", textX, textY);
+      this.ui2D.fillText('Shots', textX, textY);
       textY = channelStartY + Math.round(channelStep / 2) - halfFontSize;
       if (this.showSelectedAssets) {
         for (const asset of this.selectedAssets) {
@@ -623,13 +623,13 @@ export default {
     },
 
     onKeyDown: function (event) {
-      if (event.key === "Home") {
+      if (event.key === 'Home') {
         this.fitTimelineView();
-      } else if (event.key === "ArrowRight") {
+      } else if (event.key === 'ArrowRight') {
         const idx = this.shots.indexOf(this.shotForCurrentFrame);
         const newIdx = Math.min(this.shots.length, (idx === -1) ? 0 : idx + 1);
         this.$emit('set-current-frame', this.shots[newIdx].startFrame);
-      } else if (event.key === "ArrowLeft") {
+      } else if (event.key === 'ArrowLeft') {
         const idx = this.shots.indexOf(this.shotForCurrentFrame);
         const newIdx = Math.max(0, (idx === -1) ? 0 : idx - 1);
         this.$emit('set-current-frame', this.shots[newIdx].startFrame);

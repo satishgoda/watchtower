@@ -16,7 +16,7 @@
 
 <script>
 export default {
-  name: "Toolbar",
+  name: 'Toolbar',
   props: {
     projects: {type: Array},
     currentProjectId: {type: String}

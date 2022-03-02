@@ -9,7 +9,7 @@ import videojs from 'video.js';
 import './../../node_modules/video.js/dist/video-js.css'
 
 export default {
-  name: "VideoPlayer",
+  name: 'VideoPlayer',
   props: {
     currentFrame: Number,
     frameOffset: Number,
