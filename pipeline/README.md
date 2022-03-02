@@ -2,6 +2,7 @@
 
 In order to generate data for Watchtower, follow these steps:
 
+* Create a new folder, step into it and perform:
 * `python -m venv .venv`
 * `source .venv/bin/activate`
 * `pip install watchtower-pipeline`
