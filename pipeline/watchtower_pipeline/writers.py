@@ -1,5 +1,7 @@
 import json
 import logging
+import pathlib
+import shutil
 from dataclasses import dataclass, asdict, field
 from typing import Dict, List, Optional
 from tqdm import tqdm
@@ -70,3 +72,17 @@ class ProjectWriter:
         self.dump_data('shots', [asdict(s) for s in self.shots])
         self.dump_data('sequences', [asdict(s) for s in self.sequences])
         self.dump_data('casting', {k: v.to_dict() for k, v in self.casting.items()})
+
+
+@dataclass
+class WatchtowerBundler:
+    @staticmethod
+    def bundle(static_path: pathlib.Path):
+        """Combine the embedded dist_watchtower with the static_path content."""
+        dist_watchtower_src = pathlib.Path(__file__).parent.parent / 'dist_watchtower'
+        dist_watchtower_dst = pathlib.Path().cwd() / 'watchtower'
+        shutil.copytree(dist_watchtower_src, dist_watchtower_dst, dirs_exist_ok=True)
+        shutil.copytree(static_path.parent, dist_watchtower_dst, dirs_exist_ok=True)
+        logging.info(f"Watchtower bundle ready at {dist_watchtower_dst}")
+        logging.info(f"You can preview it with the following command:")
+        logging.info(f"\tpython -m http.server --directory {dist_watchtower_dst}")

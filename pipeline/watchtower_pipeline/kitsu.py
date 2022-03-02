@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 import logging
-import os
 import pathlib
 import requests
 import shutil
@@ -315,27 +314,15 @@ def fetch_and_save(dotenv='.env.local') -> pathlib.Path:
     return static_path_dst
 
 
-def bundle_watchtower(static_path: pathlib.Path):
-    """Combine the embedded dist_watchtower with the static_path content."""
-    dist_watchtower_src = pathlib.Path(__file__).parent.parent / 'dist_watchtower'
-    dist_watchtower_dst = pathlib.Path().cwd() / 'watchtower'
-    shutil.copytree(dist_watchtower_src, dist_watchtower_dst, dirs_exist_ok=True)
-    shutil.copytree(static_path.parent, dist_watchtower_dst, dirs_exist_ok=True)
-    logging.info(f"Watchtower bundle ready at {dist_watchtower_dst}")
-    logging.info(f"You can preview it with the following command:")
-    logging.info(f"\tpython -m http.server --directory {dist_watchtower_dst}")
-
-
 def main(args):
-    parser = argparse.ArgumentParser(description="Generate watchtower content.")
+    parser = argparse.ArgumentParser(description="Generate Watchtower content.")
     parser.add_argument("-b", "--bundle", action=argparse.BooleanOptionalAction)
     args = parser.parse_args(args)
 
     static_path = fetch_and_save()
     if args.bundle:
-        bundle_watchtower(static_path)
-        shutil.rmtree(static_path)
-        os.rmdir(static_path)
+        writers.WatchtowerBundler.bundle(static_path)
+        shutil.rmtree(static_path.parent)
 
 
 if __name__ == "__main__":

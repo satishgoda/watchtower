@@ -1,8 +1,8 @@
 # Watchtower Pipeline
 
-Requirements:
+## Requirements
 * Python 3.9
-* A working installation of Kitsu
+* A working installation of Kitsu (optional)
 
 In order to generate data for Watchtower, follow these steps:
 
@@ -10,6 +10,18 @@ In order to generate data for Watchtower, follow these steps:
 * `python -m venv .venv`
 * `source .venv/bin/activate`
 * `pip install watchtower-pipeline`
+
+## Create Example Data
+To create an example project that will give you an idea of how the pipeline works:
+
+* Run `python -m watchtower_pipeline.example -b`
+* Copy the content of the `watchtower` folder into your webserver
+* Alternatively you can navigate to the folder and run `python -m http.server`
+
+
+## Create Kitsu-sourced Data
+If you have a working Kitsu (and Zou) install and want to extract and visualize data from it:
+
 * Create a `.env.local` file as follows:
 
 ```
