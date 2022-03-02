@@ -1,4 +1,8 @@
-# Watchtower Pipeline Tools
+# Watchtower Pipeline
+
+Requirements:
+* Python 3.9
+* A working installation of Kitsu
 
 In order to generate data for Watchtower, follow these steps:
 
