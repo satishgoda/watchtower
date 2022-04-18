@@ -1,9 +1,9 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import MainView from "@/components/MainView";
-import Dashboard from "@/components/Dashboard";
-import About from "@/components/About";
-import auth from "@/lib/auth";
+import MainView from '@/components/MainView';
+import Dashboard from '@/components/Dashboard';
+import About from '@/components/About';
+import auth from '@/lib/auth';
 
 Vue.use(VueRouter)
 
