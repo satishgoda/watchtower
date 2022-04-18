@@ -37,6 +37,7 @@ export default {
     taskStatuses: Array,
     sequences: Array,
     shots: Array,
+    assets: Array,
     totalFrames: Number,
     fps: Number,
     currentFrame: Number,
@@ -130,6 +131,9 @@ export default {
     },
     shots: function () {
       this.draw();
+    },
+    assets: function () {
+      this.onChannelsUpdated();
     },
     currentFrame: function () {
       // Find the shot that should be highlighted.
@@ -233,15 +237,17 @@ export default {
     },
 
     updateChannelNamesWidth: function () {
+      // Calculate the width in px needed to fit all possible channel names.
       let channelNamesWidth = this.ui2D.measureText('Sequences').width;
       for (const task of this.taskTypesForShots) {
         channelNamesWidth = Math.max(channelNamesWidth, this.ui2D.measureText(task.name).width);
       }
-      for (const asset of this.selectedAssets) {
+      for (const asset of this.assets) {
         channelNamesWidth = Math.max(channelNamesWidth, this.ui2D.measureText(asset.name).width);
       }
 
-      this.channelNamesWidth = channelNamesWidth;
+      // Use the widest name found, but clamp to a fixed max width to guard against unreasonably long strings from data.
+      this.channelNamesWidth = Math.min(channelNamesWidth, 400);
     },
 
     draw: function () {
@@ -542,7 +548,7 @@ export default {
         this.timelineView.x = this.timelineRange.x;
         this.timelineView.w -= overlap;
       }
-      // draw() will be trigger by the update to timelineView.
+      // draw() will be triggered by the update to timelineView.
     },
 
     fitTimelineView: function() {

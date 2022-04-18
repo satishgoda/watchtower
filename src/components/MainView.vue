@@ -76,6 +76,7 @@
             :taskStatuses="taskStatuses"
             :sequences="sequences"
             :shots="shots"
+            :assets="assets"
             :current-frame="currentFrame"
             :total-frames="totalFrames"
             :fps="fps"
