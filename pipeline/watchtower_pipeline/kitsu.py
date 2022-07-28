@@ -123,7 +123,7 @@ class KitsuUserContextWriter:
                 id=tt['id'],
                 name=tt['name'],
                 color=tt['color'],
-                for_shots=tt['for_shots'],
+                for_shots=(tt['for_entity'] == 'Shot'),
             )
             task_types_list.append(task_type)
 
