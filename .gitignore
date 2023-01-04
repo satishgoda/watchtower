@@ -30,3 +30,5 @@ pnpm-debug.log*
 /pipeline/dist/
 /pipeline/dist_watchtower/
 /watchtower/
+/client-web/public/static/previews
+/client-web/public/static/projects

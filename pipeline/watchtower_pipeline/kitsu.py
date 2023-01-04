@@ -6,7 +6,7 @@ import requests
 import shutil
 import sys
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from watchtower_pipeline import models, writers
 
@@ -247,8 +247,8 @@ class KitsuProjectWriter:
         sequences: List[models.Sequence],
         shots: List[models.Shot],
         assets: List[models.Asset],
-    ) -> Dict[str, models.SequenceCasting]:
-        casting = {}
+    ) -> List[models.ShotCasting]:
+        shot_castings = []
         for sequence in sequences:
             r_casting = self.kitsu_client.get(
                 f"/data/projects/{project.id}/sequences/{sequence.id}/casting"
@@ -256,7 +256,6 @@ class KitsuProjectWriter:
             casting_per_shot = r_casting.json()
             if not casting_per_shot:
                 continue
-            shot_castings = []
             for shot_id, cast_assets in casting_per_shot.items():
                 # Lookup shot in the Shots list
                 shot = next((s for s in shots if s.id == shot_id), None)
@@ -266,11 +265,8 @@ class KitsuProjectWriter:
                     asset = next((a for a in assets if a.id == ca['asset_id']), None)
                     shot_casting.assets.append(asset)
                 shot_castings.append(shot_casting)
-            casting[sequence.id] = models.SequenceCasting(
-                sequence=sequence, shot_castings=shot_castings
-            )
 
-        return casting
+        return shot_castings
 
     # Edit
     @staticmethod

@@ -196,6 +196,9 @@ class ShotCasting:
     shot: Shot
     assets: List[Asset] = field(default_factory=list)
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {'shot_id': self.shot.id, 'asset_ids': [a.id for a in self.assets]}
+
 
 @dataclass
 class Sequence(IdMixin):

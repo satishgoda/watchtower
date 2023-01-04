@@ -49,7 +49,7 @@ class ProjectWriter:
     assets: List[models.Asset]
     sequences: List[models.Sequence]
     edit: models.Edit
-    casting: Dict[str, models.SequenceCasting]
+    casting: List[models.ShotCasting]
 
     def dump_data(self, name, data):
         dst = models.BASE_PATH / f"public/static/projects/{self.project.id}/{name}.json"
@@ -59,6 +59,7 @@ class ProjectWriter:
         logging.debug(f"Saved {name} data for project {self.project.id}")
 
     def download_previews(self, requests_headers: Optional[Dict] = None, force=False):
+        # Get the project square thumbnail
         self.project.download_and_assign_thumbnail(requests_headers=requests_headers, force=force)
         for s in tqdm(self.shots, desc="Downloading Shot thumbnails"):
             s.download_and_assign_thumbnail(requests_headers=requests_headers, force=force)
@@ -71,7 +72,7 @@ class ProjectWriter:
         self.dump_data('assets', [asdict(a) for a in self.assets])
         self.dump_data('shots', [asdict(s) for s in self.shots])
         self.dump_data('sequences', [asdict(s) for s in self.sequences])
-        self.dump_data('casting', {k: v.to_dict() for k, v in self.casting.items()})
+        self.dump_data('casting', [c.to_dict() for c in self.casting])
 
 
 @dataclass
