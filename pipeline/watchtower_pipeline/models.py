@@ -41,7 +41,7 @@ class StaticPreviewMixin:
         return pathlib.Path('static/previews') / file_id[:2] / filename
 
     @staticmethod
-    def fetch_and_save_image(src_url, headers, dst: pathlib.Path, force=False):
+    def fetch_and_save_media(src_url, headers, dst: pathlib.Path, force=False):
         if not dst.is_file() or force:
             dst.parent.mkdir(parents=True, exist_ok=True)
             r_file = requests.get(src_url, headers=headers, allow_redirects=True)
@@ -68,7 +68,7 @@ class StaticPreviewMixin:
             return
         dst_url = self.generate_preview_file_path(self.hash_filename(src_url))
         dst = BASE_PATH / 'public' / dst_url
-        self.fetch_and_save_image(src_url, requests_headers, dst, force=force)
+        self.fetch_and_save_media(src_url, requests_headers, dst, force=force)
         setattr(self, 'thumbnailUrl', str(dst_url))
 
 
@@ -236,3 +236,4 @@ class Edit:
             'sourceName': self.sourceName,
             'sourceType': self.sourceType,
         }
+

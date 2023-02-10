@@ -8,7 +8,7 @@ import sys
 from dataclasses import dataclass
 from typing import List, Optional
 
-from watchtower_pipeline import models, writers
+from watchtower_pipeline import models, writers, ffprobe
 
 logging.basicConfig(
     level=logging.INFO,
@@ -269,12 +269,46 @@ class KitsuProjectWriter:
         return shot_castings
 
     # Edit
-    @staticmethod
-    def get_project_edit(project: models.Project):
+    def get_project_edit(self, project: models.Project):
+
+        logging.info(f"Getting edit for %s" % project.name)
+        # Get first edit (if exists)
+        r_edits = self.kitsu_client.get('/data/edits/with-tasks', params={'project_id': project.id})
+        edit = None
+        for e in r_edits.json():
+            if e['canceled']:
+                continue
+            edit = e
+            # Break here, because we assume that the first edit is the one we need
+            # since we expect only one edit to exist.
+            break
+        # Get preview-files from the first task found (usually only one)
+        r_previews = self.kitsu_client.get(f"/data/edits/{edit['id']}/preview-files")
+        # Get the first preview (last revision)
+        latest_preview = None
+        for _, preview_list in r_previews.json().items():
+            latest_preview = preview_list[0]
+            break
+
+        dst = models.BASE_PATH / f"public/static/projects/{project.id}/edit.mp4"
+        models.StaticPreviewMixin.fetch_and_save_media(
+            f"{self.kitsu_client.base_url}/movies/low/preview-files/{latest_preview['id']}.mp4",
+            headers=self.kitsu_client.headers,
+            dst=dst,
+        )
+
+        # Set frame offset from metadata
+
+        frame_offset = 0
+        try:
+            frame_offset = int(edit['data']['frame_start'])
+        except KeyError:
+            pass
+
         return models.Edit(
             project=project,
-            totalFrames=10000,
-            frameOffset=20,
+            totalFrames=ffprobe.get_frames_count(dst),
+            frameOffset=frame_offset,
         )
 
     def get_project_writer(self, p: models.Project):
@@ -282,7 +316,7 @@ class KitsuProjectWriter:
         sequences = KitsuProjectWriter.get_project_sequences(self, p.id)
         shots = KitsuProjectWriter.get_project_shots(self, p)
         casting = KitsuProjectWriter.get_project_casting(self, p, sequences, shots, assets)
-        edit = KitsuProjectWriter.get_project_edit(project=p)
+        edit = KitsuProjectWriter.get_project_edit(self, project=p)
         return writers.ProjectWriter(
             project=p,
             assets=assets,
