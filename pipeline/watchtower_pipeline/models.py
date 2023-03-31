@@ -226,18 +226,6 @@ class Sequence(IdMixin):
 
 
 @dataclass
-class SequenceCasting:
-    sequence: Sequence
-    shot_castings: List[ShotCasting]
-
-    def to_dict(self) -> Dict[str, Any]:
-        d = {}
-        for s in self.shot_castings:
-            d[s.shot.id] = [{'asset_id': a.id} for a in s.assets]
-        return d
-
-
-@dataclass
 class Edit:
     """The complete cut of the project."""
 
