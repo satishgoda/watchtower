@@ -89,11 +89,15 @@ class IdMixin:
 
 @dataclass
 class AssetType(IdMixin):
+    """Asset Type such as prop, character, etc."""
+
     id: Optional[str] = None
 
 
 @dataclass
 class TaskType(IdMixin):
+    """Task Type such as layout, animation, lighting etc."""
+
     color: str  # A hex color
     for_shots: bool = False
     id: Optional[str] = None
@@ -101,12 +105,16 @@ class TaskType(IdMixin):
 
 @dataclass
 class TaskStatus(IdMixin):
+    """Task Status such as todo, in_progress, review, etc"""
+
     color: str  # A hex color
     id: Optional[str] = None
 
 
 @dataclass
 class User(StaticPreviewMixin, IdMixin):
+    """Members of a project, associated to tasks."""
+
     has_avatar: bool = False
     id: Optional[str] = None
     thumbnailUrl: Optional[str] = None
@@ -125,6 +133,8 @@ class User(StaticPreviewMixin, IdMixin):
 
 @dataclass
 class Project(StaticPreviewMixin, IdMixin):
+    """A film, short film, etc."""
+
     ratio: str
     resolution: str
     asset_types: List[str] = field(default_factory=list)
@@ -148,6 +158,8 @@ class JsonMixin:
 
 @dataclass
 class Task:
+    """A task associated with a Shot or an Asset."""
+
     task_status_id: str
     task_type_id: str
     assignees: List[str] = field(default_factory=list)  # Maps to User ID
@@ -163,6 +175,8 @@ class Task:
 
 @dataclass
 class Asset(StaticPreviewMixin, IdMixin):
+    """An entity such as a character, set, prop, etc."""
+
     asset_type_id: str
     tasks: List[Task] = field(default_factory=list)
     id: Optional[str] = None
@@ -170,12 +184,16 @@ class Asset(StaticPreviewMixin, IdMixin):
 
 
 class ShotData(TypedDict):
+    """Shot metadata (usually custom defined in the production tracker)"""
+
     frame_in: int
     frame_out: int
 
 
 @dataclass
 class Shot(StaticPreviewMixin, IdMixin):
+    """A shot, the reference point for tasks."""
+
     sequence_id: str
     data: ShotData
     tasks: List[Task] = field(default_factory=list)
@@ -193,6 +211,8 @@ class Shot(StaticPreviewMixin, IdMixin):
 
 @dataclass
 class ShotCasting:
+    """The relationship between assets and shots."""
+
     shot: Shot
     assets: List[Asset] = field(default_factory=list)
 
@@ -219,6 +239,8 @@ class SequenceCasting:
 
 @dataclass
 class Edit:
+    """The complete cut of the project."""
+
     project: Project
     totalFrames: int
     frameOffset: int
@@ -236,4 +258,3 @@ class Edit:
             'sourceName': self.sourceName,
             'sourceType': self.sourceType,
         }
-
