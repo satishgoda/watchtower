@@ -63,8 +63,8 @@ def create_example_project():
         task_statuses_list.append(task_status)
 
     project = models.Project(
-        id='sprite-fright-uuid',
-        name='Sprite Fright',
+        id='example-project-uuid',
+        name='Example Project',
         ratio="2.35:1",
         resolution='2018x858',
         asset_types=[],
@@ -108,7 +108,7 @@ def create_example_project():
                 )
             )
         assets_list.append(asset)
-    # Create Sequences
+    # Create a single Sequence
     sequence = models.Sequence(name='Seq 1')
     sequences_list = [sequence]
     # Create Shots
@@ -141,8 +141,6 @@ def create_example_project():
     shot_castings = []
     for s in shots_list:
         shot_castings.append(models.ShotCasting(shot=s, assets=random.sample(assets_list, 3)))
-    sequence_casting = models.SequenceCasting(sequence=sequence, shot_castings=shot_castings)
-    casting = {sequence.id: sequence_casting}
 
     # Create Edit
     edit = models.Edit(
@@ -157,7 +155,7 @@ def create_example_project():
         assets=assets_list,
         sequences=sequences_list,
         edit=edit,
-        casting=casting,
+        casting=shot_castings,
     )
 
     project_writer.download_previews()
