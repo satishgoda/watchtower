@@ -79,3 +79,8 @@ type ShotCasting = {
   shot_id: string;
   asset_ids: Array<string>;
 }
+
+type VideoSource = {
+  src: string;
+  type: string;
+}

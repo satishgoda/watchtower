@@ -16,12 +16,12 @@ const projectStore = useProjectStore();
 const videoPlayer = ref(null)
 
 interface Data {
-  player?: videojs.player
+  player?: videojs.Player
   animationFrameQueue?: number
 }
 
 const data: Data = reactive({
-  player: null,
+  player: undefined,
   animationFrameQueue: undefined,
 })
 
@@ -38,6 +38,7 @@ const props = defineProps({
 watch(
   () => projectStore.isPlaying,
   () => {
+    if (!data.player) {return}
     if (projectStore.isPlaying) {
       data.player.play()
     } else {
@@ -55,17 +56,17 @@ watch(
     }
 
     // Limit frame value to 0 or greater
-    let currentTime = Math.max(0, (projectStore.currentFrame - projectStore.frameOffset) / projectStore.fps);
+    const currentTime = Math.max(0, (projectStore.currentFrame - projectStore.frameOffset) / projectStore.fps);
     data.player.currentTime(currentTime);
   }
 )
 
 watch(
-  () => projectStore.videoPlayerOptions,
+  () => projectStore.videoPlayerOptions.sources,
   () => {
     if (data.player) {
       // data.player.dispose()
-      data.player.options.sources = projectStore.videoPlayerOptions.sources;
+      data.player.options_.sources = projectStore.videoPlayerOptions.sources;
     } else {
       data.player = videojs(videoPlayer.value, projectStore.videoPlayerOptions, function onPlayerReady() {
         console.log('Player is ready');

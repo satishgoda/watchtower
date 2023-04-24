@@ -22,7 +22,12 @@ export const useProjectStore = defineStore('project', {
     totalFrames: 1,
     frameOffset: 0,
     fps: 24,
-    videoPlayerOptions: {},
+    videoPlayerOptions: {
+      autoplay: false,
+      controls: true,
+      preload: 'auto',
+      sources: new Array<VideoSource>(),
+    },
     // Runtime state
     isPlaying: false,
     currentFrame: 0,
@@ -201,17 +206,12 @@ export const useProjectStore = defineStore('project', {
       const response = await axios.get(urlEdit);
       this.totalFrames = response.data.totalFrames;
       this.frameOffset = response.data.frameOffset;
-      this.videoPlayerOptions = {
-        autoplay: false,
-        controls: true,
-        preload: 'auto',
-        sources: [
-          {
-            src: response.data.sourceName,
-            type: response.data.sourceType,
-          }
-        ]
-      };
+      this.videoPlayerOptions.sources = [
+        {
+          src: `${basePath}${response.data.sourceName}`,
+          type: response.data.sourceType,
+        }
+      ]
       // this.setCurrentFrame(response.data.frameOffset);
 
     },
