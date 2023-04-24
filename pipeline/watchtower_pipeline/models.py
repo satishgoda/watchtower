@@ -237,7 +237,7 @@ class Edit:
 
     def __post_init__(self):
         if not self.sourceName:
-            self.sourceName = f"/data/projects/{self.project.id}/edit.mp4"
+            self.sourceName = f"data/projects/{self.project.id}/edit.mp4"
 
     def to_dict(self) -> Dict[str, Any]:
         return {
