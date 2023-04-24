@@ -290,7 +290,7 @@ class KitsuProjectWriter:
             latest_preview = preview_list[0]
             break
 
-        dst = models.BASE_PATH / f"public/static/projects/{project.id}/edit.mp4"
+        dst = models.BASE_PATH / f"public/data/projects/{project.id}/edit.mp4"
         models.StaticPreviewMixin.fetch_and_save_media(
             f"{self.kitsu_client.base_url}/movies/low/preview-files/{latest_preview['id']}.mp4",
             headers=self.kitsu_client.headers,

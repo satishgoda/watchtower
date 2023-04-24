@@ -19,32 +19,32 @@ export default {
     switch(urlType) {
       case UrlTypes.Context:
         return (this.isStatic ?
-          `${basePath}static/projects/context.json` :
+          `${basePath}data/projects/context.json` :
           '/api/data/user/context');
 
       case UrlTypes.Project:
         return (this.isStatic ?
-          `${basePath}static/projects/${projectId}/project.json` :
+          `${basePath}data/projects/${projectId}/project.json` :
           `/api/data/projects/${projectId}`);
 
       case UrlTypes.Sequences:
         return this.isStatic ?
-           `${basePath}static/projects/${projectId}/sequences.json` :
+           `${basePath}data/projects/${projectId}/sequences.json` :
            `/api/data/sequences?${projectQueryParams}`
 
       case UrlTypes.Shots:
         return this.isStatic ?
-           `${basePath}static/projects/${projectId}/shots.json` :
+           `${basePath}data/projects/${projectId}/shots.json` :
            `/api/data/shots/with-tasks?${projectQueryParams}`
 
       case UrlTypes.Assets:
         return this.isStatic ?
-           `${basePath}static/projects/${projectId}/assets.json` :
+           `${basePath}data/projects/${projectId}/assets.json` :
            `/api/data/assets/with-tasks?${projectQueryParams}`
 
       case UrlTypes.Casting:
         return this.isStatic ?
-           `${basePath}static/projects/${projectId}/casting.json` :
+           `${basePath}data/projects/${projectId}/casting.json` :
            ``
             // TODO: Implement a new API in zou to fetch casting
             // independently from sequences.

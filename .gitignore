@@ -24,11 +24,11 @@ pnpm-debug.log*
 *.paw
 /public/*.mkv
 /public/*.mp4
-/public/static/previews/*/*.png
-/public/static/projects/*
+/public/data/previews/*/*.png
+/public/data/projects/*
 /public/context.json
 /pipeline/dist/
 /pipeline/dist_watchtower/
 /watchtower/
-/client-web/public/static/previews
-/client-web/public/static/projects
+/client-web/public/data/previews
+/client-web/public/data/projects

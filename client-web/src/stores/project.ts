@@ -197,7 +197,7 @@ export const useProjectStore = defineStore('project', {
       }
     },
     async fetchEditData(projectId: string) {
-      const urlEdit = `/static/projects/${projectId}/edit.json`
+      const urlEdit = `/data/projects/${projectId}/edit.json`
       const response = await axios.get(urlEdit);
       this.totalFrames = response.data.totalFrames;
       this.frameOffset = response.data.frameOffset;

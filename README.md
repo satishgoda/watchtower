@@ -24,7 +24,7 @@ Watchtower is a Vue application. It can be managed through the [vue-cli package]
 * Have access to the API of a working Zou (and optionally Kitsu) installation
 * Follow the instructions in `pipeline/README.md`
 * At this point it's possible to run Watchtower and check the status of your production
-* For each project it's currently necessary to manually place an `edit.mp4`file in `static/projects/<project-id>/`
+* For each project it's currently necessary to manually place an `edit.mp4`file in `data/projects/<project-id>/`
 
 ### Compiles and hot-reloads for development
 ```
@@ -55,7 +55,7 @@ Watchtower can run as a standalone application, and use JSON file as data source
 should be structured:
 
 - context.json (top level data)
-- static/projects (dir. contains a list of projects)
+- data/projects (dir. contains a list of projects)
   - <project_uuid> (dir. contains project data)
     - assets.json
     - casting.json (dir. contains casting data for all sequences)
