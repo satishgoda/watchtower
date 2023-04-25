@@ -284,9 +284,19 @@ class KitsuProjectWriter:
             break
         # Get preview-files from the first task found (usually only one)
         r_previews = self.kitsu_client.get(f"/data/edits/{edit['id']}/preview-files")
+        # Get the Edit task types (so we can identify the task of type "Edit")
+        r_task_types = self.kitsu_client.get(f"/data/edits/{edit['id']}/task-types")
+        edit_task_id = None
+        for task_type in r_task_types.json():
+            if task_type['name'] != 'Edit':
+                continue
+            # Save the edit task id, so we look it up when listing the preview-files
+            edit_task_id = task_type['id']
         # Get the first preview (last revision)
         latest_preview = None
-        for _, preview_list in r_previews.json().items():
+        for task_type_id, preview_list in r_previews.json().items():
+            if edit_task_id != task_type_id:
+                continue
             latest_preview = preview_list[0]
             break
 
