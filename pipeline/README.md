@@ -1,35 +1,13 @@
 # Watchtower Pipeline
 
-## Requirements
-* Python 3.9
-* A working installation of Kitsu (optional)
+Script to fetch data for Watchtower. This can also be used as a library for custom scripts.
 
-In order to generate data for Watchtower, follow these steps:
+## Files overview
+These are the building blocks of the pipeline:
+- `models.py`: Dataclass representations of all Watchtower data structures
+- `writers.py`: Utilities to write out JSON files
+- `ffprobe.py`: Wrapper around `ffprobe`, needed to calculate the duration of a video file
 
-* Create a new folder, step into it and perform:
-* `python -m venv .venv`
-* `source .venv/bin/activate`
-* `pip install watchtower-pipeline`
-
-## Create Example Data
-To create an example project that will give you an idea of how the pipeline works:
-
-* Run `python -m watchtower_pipeline.example -b`
-* Copy the content of the `watchtower` folder into your webserver
-* Alternatively you can navigate to the folder and run `python -m http.server`
-
-
-## Create Kitsu-sourced Data
-If you have a working Kitsu (and Zou) install and want to extract and visualize data from it:
-
-* Create a `.env.local` file as follows:
-
-```
-KITSU_DATA_SOURCE_URL=https://<your-kitsu-instance>/api
-KITSU_DATA_SOURCE_USER_EMAIL=user@example.org
-KITSU_DATA_SOURCE_USER_PASSWORD=password
-```
-
-* Run `python -m watchtower_pipeline.kitsu -b`
-* Copy the content of the `watchtower` folder into your webserver
-* Alternatively you can navigate to the folder and run `python -m http.server`
+This is how those blocks can be used:
+- `example.py`: Generate synthetic data for demo purposes
+- `kitsu.py`: Fetch data from Kitsu (this is the setup used at Blender Studio)
