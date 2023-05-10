@@ -19,7 +19,7 @@ You can deploy Watchtower in your pipeline by following the instructions in `pip
 
 ## Development Guide
 
-Contributions to Watchtower are welcome! Check out `docs/development.md` for info on how to get
+Contributions to Watchtower are welcome! Check out `docs/develop.md` for info on how to get
 started.
 
 
