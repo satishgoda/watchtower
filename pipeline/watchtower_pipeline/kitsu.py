@@ -19,6 +19,7 @@ logging.basicConfig(
 
 @dataclass
 class Config:
+    """Configuration setup for Kitsu client."""
     dotenv: Optional[str] = ''
     base_url: Optional[str] = ''
     email: Optional[str] = ''
@@ -87,13 +88,14 @@ class KitsuClient:
 
 
 @dataclass
-class KitsuUserContextWriter:
+class KitsuContextWriter:
+    """Writer for the context.json file."""
     kitsu_client: KitsuClient
 
     def fetch_user_context(self):
         return self.kitsu_client.get('/data/user/context').json()
 
-    def get_context_writer(self) -> writers.ContextWriter:
+    def setup(self) -> writers.ContextWriter:
         user_context = self.fetch_user_context()
 
         # Users
@@ -161,6 +163,7 @@ class KitsuUserContextWriter:
 
 @dataclass
 class KitsuProjectWriter:
+    """Writer for project files."""
     kitsu_client: KitsuClient
 
     # Assets
@@ -268,7 +271,7 @@ class KitsuProjectWriter:
 
         return shot_castings
 
-    # Edit
+    # Editorial
     def get_project_edit(self, project: models.Project):
 
         logging.info(f"Getting edit for %s" % project.name)
@@ -321,12 +324,12 @@ class KitsuProjectWriter:
             frameOffset=frame_offset,
         )
 
-    def get_project_writer(self, p: models.Project):
-        assets = KitsuProjectWriter.get_project_assets(self, p.id)
-        sequences = KitsuProjectWriter.get_project_sequences(self, p.id)
-        shots = KitsuProjectWriter.get_project_shots(self, p)
-        casting = KitsuProjectWriter.get_project_casting(self, p, sequences, shots, assets)
-        edit = KitsuProjectWriter.get_project_edit(self, project=p)
+    def setup(self, p: models.Project):
+        assets = self.get_project_assets(self, p.id)
+        sequences = self.get_project_sequences(self, p.id)
+        shots = self.get_project_shots(self, p)
+        casting = self.get_project_casting(self, p, sequences, shots, assets)
+        edit = self.get_project_edit(self, p)
         return writers.ProjectWriter(
             project=p,
             assets=assets,
@@ -338,14 +341,15 @@ class KitsuProjectWriter:
 
 
 def fetch_and_save(dotenv='.env.local') -> pathlib.Path:
+    """Setup a Kitsu client, fetch all context and projects data, download assets."""
     config = Config(dotenv=dotenv)
 
     kitsu_client = KitsuClient(config=config)
-    context_writer = KitsuUserContextWriter(kitsu_client=kitsu_client).get_context_writer()
+    context_writer = KitsuContextWriter(kitsu_client=kitsu_client).setup()
     context_writer.download_previews(kitsu_client.headers)
     context_writer.write_as_json()
     for p in context_writer.projects:
-        project_writer = KitsuProjectWriter(kitsu_client=kitsu_client).get_project_writer(p)
+        project_writer = KitsuProjectWriter(kitsu_client=kitsu_client).setup(p)
         project_writer.download_previews(kitsu_client.headers)
         project_writer.write_as_json()
 
