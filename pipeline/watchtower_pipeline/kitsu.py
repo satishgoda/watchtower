@@ -325,11 +325,11 @@ class KitsuProjectWriter:
         )
 
     def setup(self, p: models.Project):
-        assets = self.get_project_assets(self, p.id)
-        sequences = self.get_project_sequences(self, p.id)
-        shots = self.get_project_shots(self, p)
-        casting = self.get_project_casting(self, p, sequences, shots, assets)
-        edit = self.get_project_edit(self, p)
+        assets = self.get_project_assets(p.id)
+        sequences = self.get_project_sequences(p.id)
+        shots = self.get_project_shots(p)
+        casting = self.get_project_casting(p, sequences, shots, assets)
+        edit = self.get_project_edit(p)
         return writers.ProjectWriter(
             project=p,
             assets=assets,
