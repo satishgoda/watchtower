@@ -285,6 +285,13 @@ class KitsuProjectWriter:
             # Break here, because we assume that the first edit is the one we need
             # since we expect only one edit to exist.
             break
+        if not edit:
+            return models.Edit(
+            project=project,
+            totalFrames=0,
+            frameOffset=0,
+        )
+
         # Get preview-files from the first task found (usually only one)
         r_previews = self.kitsu_client.get(f"/data/edits/{edit['id']}/preview-files")
         # Get the Edit task types (so we can identify the task of type "Edit")
