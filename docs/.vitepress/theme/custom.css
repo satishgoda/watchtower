@@ -13,3 +13,24 @@
   --vp-font-family-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco,
     Consolas, 'Liberation Mono', 'Courier New', monospace;
 }
+
+.VPNavBar {
+  background-color: var(--vp-c-bg);
+}
+
+.VPNavBar.has-sidebar {
+  background-color: transparent;
+}
+
+.VPHero {
+  background-image: url("/watchtower_screenshot.png");
+  background-size: cover;
+  margin-bottom: 2em;
+}
+
+.VPHero .name .clip,
+.VPHero .tagline,
+.VPHero .text {
+  color: white;
+  -webkit-text-fill-color: white;
+}

@@ -3,8 +3,7 @@ layout: home
 
 hero:
   text: Get involved
-  tagline: Watchtower is a Free and Open Source project, developed in public under the GPL license.
-           A visual production tracking tool, which makes complex information accessible in one screen.
+  tagline: Watchtower welcomes contributions. Join the conversation on Blender Chat to find out more.
 
   actions:
     - theme: alt
