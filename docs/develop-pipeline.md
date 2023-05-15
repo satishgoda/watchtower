@@ -45,5 +45,10 @@ projects/
 ```
 
 ## Publish an update to Pypi
-* Create a client-web build with `poetry run package_watchtower_vue`
-* `poetry publish --build`
+* Navigate to `client-web` and then `yarn run build-for-py`
+* Navigate to `pipeline` and run `poetry publish --build`
+
+## Publish the docs
+* Navigate to `docs` and ensure you have a `.env` file
+* Run `yarn run docs:publish`
+
