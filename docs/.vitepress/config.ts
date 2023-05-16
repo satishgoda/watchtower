@@ -8,6 +8,16 @@ export default defineConfig({
   lastUpdated: true,
   cleanUrls: true,
   srcExclude: ['**/README.md',],
+  head: [
+    [
+      'script',
+      {
+        defer: '',
+        'data-domain': 'watchtower.blender.org',
+        src: 'https://analytics.blender.org/js/script.js'
+      }
+    ],
+  ],
   themeConfig: {
     footer: {
       copyright: '(CC) Blender Foundation | studio.blender.org'
