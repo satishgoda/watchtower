@@ -128,7 +128,7 @@
 
 "@types/video.js@^7.3.51":
   version "7.3.51"
-  resolved "https://registry.yarnpkg.com/@types/video.js/-/video.js-7.3.51.tgz#ce69e02681ed6ed8abe61bb3802dd032a74d63e8"
+  resolved "https://registry.npmjs.org/@types/video.js/-/video.js-7.3.51.tgz"
   integrity sha512-xLlt/ZfCuWYBvG2MRn018RvaEplcK6dI63aOiVUeeAWFyjx3Br1hL749ndFgbrvNdY4m9FoHG1FQ/PB6IpfSAQ==
 
 "@typescript-eslint/eslint-plugin@^5.0.0":
@@ -2243,10 +2243,10 @@ typescript@~4.7.4:
   resolved "https://registry.npmjs.org/typescript/-/typescript-4.7.4.tgz"
   integrity sha512-C0WQT0gezHuw6AdY1M2jxUO83Rjf0HP7Sk1DtXj6j1EwkQNZrHAg2XPWlq62oqEhYvONq5pkC2Y9oPljWToLmQ==
 
-uirenderer-canvas@^1.0.7-beta.1:
-  version "1.0.7-beta.1"
-  resolved "https://registry.yarnpkg.com/uirenderer-canvas/-/uirenderer-canvas-1.0.7-beta.1.tgz#b503b152d324791a31cc08c97269875ad1743e08"
-  integrity sha512-5liP3432w2uQRi8uyQ7QzLVTStPnJGjxKpVsZYFyqxt8nia++mXpF/6asVxjQuGqaqeSjWxiorP9J2pRocWt8w==
+uirenderer-canvas@^1.0.7-beta.2:
+  version "1.0.7-beta.2"
+  resolved "https://registry.yarnpkg.com/uirenderer-canvas/-/uirenderer-canvas-1.0.7-beta.2.tgz#1b93399e283c431fe0ff06ea0164956eb1c76031"
+  integrity sha512-cMQVgeSRPI79PEdyiXpuQDafPizeBKimY31ykz7VgwX27zCF4UgV5jlHUWP+gKxfqdbgO0vOavbMnL7omBgYwg==
 
 unbox-primitive@^1.0.2:
   version "1.0.2"
