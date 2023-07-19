@@ -2243,10 +2243,10 @@ typescript@~4.7.4:
   resolved "https://registry.npmjs.org/typescript/-/typescript-4.7.4.tgz"
   integrity sha512-C0WQT0gezHuw6AdY1M2jxUO83Rjf0HP7Sk1DtXj6j1EwkQNZrHAg2XPWlq62oqEhYvONq5pkC2Y9oPljWToLmQ==
 
-uirenderer-canvas@^1.0.7-beta.2:
-  version "1.0.7-beta.2"
-  resolved "https://registry.yarnpkg.com/uirenderer-canvas/-/uirenderer-canvas-1.0.7-beta.2.tgz#1b93399e283c431fe0ff06ea0164956eb1c76031"
-  integrity sha512-cMQVgeSRPI79PEdyiXpuQDafPizeBKimY31ykz7VgwX27zCF4UgV5jlHUWP+gKxfqdbgO0vOavbMnL7omBgYwg==
+uirenderer-canvas@^1.0.7-beta.4:
+  version "1.0.7-beta.4"
+  resolved "https://registry.yarnpkg.com/uirenderer-canvas/-/uirenderer-canvas-1.0.7-beta.4.tgz#834bd0bc057fe21b2c731e0359a08d808b4790e6"
+  integrity sha512-OpdVMZfAUkuqIXV8VE20Hk0yDXsEENuzIF9L6LM561BqDr3b6M8RljNUYXmvmacAEfiTPCxgcESimT/+R/c2LQ==
 
 unbox-primitive@^1.0.2:
   version "1.0.2"
