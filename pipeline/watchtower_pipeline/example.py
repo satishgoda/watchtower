@@ -14,7 +14,8 @@ logging.basicConfig(
 )
 
 
-def create_example_project():
+def generate_example_project_data() -> pathlib.Path:
+    """Generate synthetic project data and write it to a path."""
     # Create Users
     users_list = []
     for i in range(10):
@@ -167,11 +168,11 @@ def create_example_project():
 
 
 def main(args):
-    parser = argparse.ArgumentParser(description="Generate example  Watchtower content.")
+    parser = argparse.ArgumentParser(description="Generate example Watchtower content.")
     parser.add_argument("-b", "--bundle", action=argparse.BooleanOptionalAction)
     args = parser.parse_args(args)
 
-    static_path = create_example_project()
+    static_path = generate_example_project_data()
     if args.bundle:
         writers.WatchtowerBundler.bundle(static_path)
         shutil.rmtree(static_path.parent)
