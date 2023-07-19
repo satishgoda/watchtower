@@ -30,63 +30,30 @@ const projectStore = useProjectStore();
 
 const canvasTimelineContainer = ref(null);
 
-interface timelineXW  {
-  x: number,
-  w: number
-}
-
-interface mouseDraggingState {
-  LMB: boolean,
-  MMB: boolean
-}
-
-interface gestureState {
-  initialMouseCoords?: XYTuple,
-  initialViewRect?: XWTuple,
-}
-
-interface Data {
+class Data {
   // View user configuration.
-  showTasksStatus: boolean,
-  showSelectedAssets: boolean,
+  showTasksStatus = true;
+  showSelectedAssets = true;
   // Canvas & rendering context.
-  canvas?: HTMLCanvasElement,
-  canvasText?: HTMLCanvasElement,
-  uiRenderer?: UIRenderer,
-  ui2D: any,
+  canvas?: HTMLCanvasElement;
+  canvasText?: HTMLCanvasElement;
+  uiRenderer?: UIRenderer;
+  ui2D?: CanvasRenderingContext2D;
   // Runtime state
-  timelineRange: timelineXW, // Position where the timeline starts and the width, in canvas coordinates.
-  timelineView: timelineXW, // Window of the visible timeline, mapped to occupy timelineRange. Represents pan and zoom.
-  channelNamesWidth: number, // Width in px of the longest channel name. Channel name area is this value + timeline.padX.
+  timelineRange = { x: 0 , w: 100 }; // Position where the timeline starts and the width, in canvas coordinates.
+  timelineView = { x: 0 , w: 100 }; // Window of the visible timeline, mapped to occupy timelineRange. Represents pan and zoom.
+  channelNamesWidth = 50; // Width in px of the longest channel name. Channel name area is this value + timeline.padX.
   // Interaction.
-  isMouseDragging: mouseDraggingState,
-  gesture: gestureState,
+  isMouseDragging = { LMB: false, MMB: false, };
+  gesture = {
+    initialMouseCoords: {x: 0, y: 0},
+    initialViewRect: {x: 0, w: 100},
+  };
   // "Current" elements for the playhead position.
-  shotForCurrentFrame: Shot | null,
+  shotForCurrentFrame: Shot | null = null;
 }
 
-const data: Data = reactive({
-  // View user configuration.
-  showTasksStatus: true,
-  showSelectedAssets: true,
-  // Canvas & rendering context.
-  canvas: undefined,
-  canvasText: undefined,
-  uiRenderer: null,
-  ui2D: null,
-  // Runtime state
-  timelineRange: { x: 0 , w: 100 }, // Position where the timeline starts and the width, in canvas coordinates.
-  timelineView: { x: 0, w: 100 }, // Window of the visible timeline, mapped to occupy timelineRange. Represents pan and zoom.
-  channelNamesWidth: 50, // Width in px of the longest channel name. Channel name area is this value + timeline.padX.
-  // Interaction.
-  isMouseDragging: { LMB: false, MMB: false, },
-  gesture: {
-    initialMouseCoords: undefined,
-    initialViewRect: undefined,
-  },
-  // "Current" elements for the playhead position.
-  shotForCurrentFrame: null,
-})
+const data = reactive(new Data());
 
 const uiConfig = {
   // Layout constants.
@@ -227,7 +194,7 @@ function updateChannelNamesWidth() {
 
 function draw() {
   const rect = getCanvasRect();
-  const ui: UIRenderer = data.uiRenderer;
+  const ui = data.uiRenderer!; // UIRenderer is guaranteed to exist. It's created onMount.
   ui.beginFrame();
 
   // Setup style for the text rendering in the overlaid canvas for text.

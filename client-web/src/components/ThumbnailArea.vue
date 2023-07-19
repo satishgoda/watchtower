@@ -61,78 +61,43 @@ interface SummaryText {
   pos: [number, number],
 }
 
-interface Data {
-  mode: string,
-  seqFilterMode: string,
-  taskTypeFilter: string,
-  showAssignees: boolean,
-  showStatuses: boolean,
-  displayMode: string,
+class Data {
+  mode = 'shots';
+  seqFilterMode = 'showAll';
+  taskTypeFilter = '';
+  showAssignees = true;
+  showStatuses = true;
+  displayMode = 'chronological';
+  statusDispMode = 'dots';
   // Canvas & rendering context.
-  statusDispMode: string,
-  canvas?: HTMLCanvasElement,
-  canvasText?: HTMLCanvasElement,
-  uiRenderer?: UIRenderer,
-  ui2D: any,
+  canvas?: HTMLCanvasElement;
+  canvasText?: HTMLCanvasElement;
+  uiRenderer?: UIRenderer;
+  ui2D?: CanvasRenderingContext2D;
   // Thumbnail rendering.
-  shotsTexBundleID?: number, // Rendering context texture ID for the packed thumb images for shots.
-  shotsOriginalImageSize: [number, number], // Resolution of the provided thumbnail images.
-  assetsTexBundleID: any,
-  assetsOriginalImageSize: [number, number],
-  thumbnailSize: [number, number], // Resolution at which to render the thumbnails.
-  thumbnails: UILayout.ThumbnailImage[], // Display info for the thumbs that should be rendered. List of UILayout.ThumbnailImage.
-  duplicatedThumbs: UILayout.ThumbnailImage[], // Keep track of thumbnails that represent the same shot (because it shows in multiple groups).
+  shotsTexBundleID?: WebGLTexture; // Rendering context texture ID for the packed thumb images for shots.
+  shotsOriginalImageSize = [0, 0]; // Resolution of the provided thumbnail images.
+  assetsTexBundleID?: WebGLTexture;
+  assetsOriginalImageSize = [0, 0];
+  thumbnailSize = [0, 0]; // Resolution at which to render the thumbnails.
+  thumbnails: UILayout.ThumbnailImage[] = []; // Display info for the thumbs that should be rendered. List of UILayout.ThumbnailImage.
+  duplicatedThumbs: UILayout.ThumbnailImage[] = []; // Keep track of thumbnails that represent the same shot (because it shows in multiple groups).
   // Grouped view.
-  thumbGroups: UILayout.ThumbnailGroup[], // Display info for groups. List of UILayout.ThumbnailGroup.
-  summaryText: SummaryText, // Heading with aggregated information of the displayed groups.
+  thumbGroups: UILayout.ThumbnailGroup[] = []; // Display info for groups. List of UILayout.ThumbnailGroup.
+  summaryText = { str: '', pos: [0, 0], }; // Heading with aggregated information of the displayed groups.
   // Assignees.
-  usersTexBundleID?: any, // Rendering context texture ID for the packed user avatar images.
+  usersTexBundleID?: WebGLTexture; // Rendering context texture ID for the packed user avatar images.
   // Interaction.
-  isMouseDragging: boolean,
+  isMouseDragging = false;
   // "Current" elements for the playhead position.
-  thumbForCurrentFrame?: any,
-  activeSequence?: any,
-  activeShot?: any,
+  thumbForCurrentFrame: UILayout.ThumbnailImage | null = null;
+  activeSequence: Sequence | null = null;
+  activeShot: Shot | null = null;
   // Task & statuses cache.
-  currTaskType?: any,
+  currTaskType: TaskType | null = null;
 }
 
-const data: Data = reactive({
-  // View user configuration.
-  mode: 'shots',
-  seqFilterMode: 'showAll',
-  taskTypeFilter: '',
-  showAssignees: true,
-  showStatuses: true,
-  displayMode: 'chronological',
-  statusDispMode: 'dots',
-  // Canvas & rendering context.
-  canvas: undefined,
-  canvasText: undefined,
-  uiRenderer: null,
-  ui2D: null,
-  // Thumbnail rendering.
-  shotsTexBundleID: undefined, // Rendering context texture ID for the packed thumb images for shots.
-  shotsOriginalImageSize: [0,0], // Resolution of the provided thumbnail images.
-  assetsTexBundleID: undefined,
-  assetsOriginalImageSize: [0,0],
-  thumbnailSize: [0,0], // Resolution at which to render the thumbnails.
-  thumbnails: [], // Display info for the thumbs that should be rendered. List of UILayout.ThumbnailImage.
-  duplicatedThumbs: [], // Keep track of thumbnails that represent the same shot (because it shows in multiple groups).
-  // Grouped view.
-  thumbGroups: [], // Display info for groups. List of UILayout.ThumbnailGroup.
-  summaryText: { str: '', pos: [0, 0], }, // Heading with aggregated information of the displayed groups.
-  // Assignees.
-  usersTexBundleID: undefined, // Rendering context texture ID for the packed user avatar images.
-  // Interaction.
-  isMouseDragging: false,
-  // "Current" elements for the playhead position.
-  thumbForCurrentFrame: null,
-  activeSequence: null,
-  activeShot: null,
-  // Task & statuses cache.
-  currTaskType: null,
-})
+const data = reactive(new Data())
 
 const uiConfig =  {
   // Layout constants.
@@ -226,9 +191,8 @@ function refreshAndDraw() {
 }
 
 function draw() {
-  const ui = data.uiRenderer;
+  const ui = data.uiRenderer!; // UIRenderer is guaranteed to exist. It's created onMount.
   ui.beginFrame();
-
 
   // Setup style for the text rendering in the overlaid canvas for text.
   const fontSize = uiConfig.fontSize;
