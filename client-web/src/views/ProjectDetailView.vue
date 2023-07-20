@@ -65,10 +65,6 @@ function uiCurrentSequenceColor(color: [number, number, number]) {
 }
 
 // Computed props
-const cssProjectDetailHeight = computed(() => {
-  return `calc(100vh - ${projectStore.timelineCanvasHeightPx + 19 + 33}px)`
-})
-
 const cssTimelineHeight = computed(() => {
   return `${projectStore.timelineCanvasHeightPx + 33}px`
 })
