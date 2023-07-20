@@ -1,7 +1,7 @@
 <template lang="pug">
 .app-container
   TheNavbar(:projects="projectsStore.data.projects")
-  RouterView(:projects="projectsStore.data.projects")
+  RouterView
 </template>
 
 <script setup lang="ts">

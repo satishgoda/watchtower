@@ -53,13 +53,18 @@
 import { UIRenderer, UILayout } from 'uirenderer-canvas';
 import { useProjectStore } from '@/stores/project';
 import { reactive, computed, watch, onMounted, nextTick } from 'vue';
+import { RuntimeState } from '@/stores/runtimeState';
+
+const emit = defineEmits<{
+  (event: 'setCurrentFrame', frameNumber: number): void
+  (event: 'setSelectedAssets', assets: Asset[]): void
+}>()
+
+const props = defineProps<{
+  runtimeState: RuntimeState
+}>()
 
 const projectStore = useProjectStore();
-
-interface SummaryText {
-  str: string,
-  pos: [number, number],
-}
 
 class Data {
   mode = 'shots';
@@ -393,7 +398,7 @@ function draw() {
   // Draw a border around the thumbnail(s) of selected assets.
   if (data.mode === 'assets') {
     const rim = uiConfig.selectedHighlight;
-    for (const asset of projectStore.selectedAssets) {
+    for (const asset of props.runtimeState.selectedAssets) {
       for (const thumb of data.thumbnails) {
         if (thumb.obj.id === asset.id) {
           ui.addFrame(thumb.pos[0], thumb.pos[1], thumbSize[0], thumbSize[1], rim.width, rim.color, 1);
@@ -442,8 +447,8 @@ function getFilteredShots() {
         // Get the shots that are visible in the timeline.
         for (const shot of projectStore.shots) {
           const lastShotFrame = shot.startFrame + shot.durationSeconds * projectStore.fps;
-          if (lastShotFrame > projectStore.timelineVisibleFrames[0]
-              && shot.startFrame < projectStore.timelineVisibleFrames[1]) {
+          if (lastShotFrame > props.runtimeState.timelineVisibleFrames[0]
+              && shot.startFrame < props.runtimeState.timelineVisibleFrames[1]) {
             filtered_shots.push(shot);
           }
         }
@@ -474,8 +479,8 @@ function filterThumbnails() {
       for (let i = 0; i < projectStore.shots.length; i++) {
         const shot = projectStore.shots[i];
         const lastShotFrame = shot.startFrame + shot.durationSeconds * projectStore.fps;
-        if (lastShotFrame > projectStore.timelineVisibleFrames[0]
-            && shot.startFrame < projectStore.timelineVisibleFrames[1]) {
+        if (lastShotFrame > props.runtimeState.timelineVisibleFrames[0]
+            && shot.startFrame < props.runtimeState.timelineVisibleFrames[1]) {
           data.thumbnails.push(new UILayout.ThumbnailImage(shot, i));
         }
       }
@@ -681,7 +686,7 @@ function findThumbnailForCurrentFrame() {
 
   let thumbForCurrentFrame = null;
   for (const thumb of data.thumbnails) {
-    if(thumb.obj.startFrame > projectStore.currentFrame)
+    if(thumb.obj.startFrame > props.runtimeState.currentFrame)
       break;
     thumbForCurrentFrame = thumb;
   }
@@ -692,7 +697,7 @@ function findShotForCurrentFrame() {
   // Find the shot for the current frame (not necessarily visible as a thumbnail).
   let shotForCurrentFrame = null;
   for (const shot of projectStore.shots) {
-    if (shot.startFrame > projectStore.currentFrame) {
+    if (shot.startFrame > props.runtimeState.currentFrame) {
       break;
     }
     shotForCurrentFrame = shot;
@@ -730,9 +735,9 @@ function onMouseEvent(event: MouseEvent) {
         && thumb.pos[1] <= mouse.y && mouse.y <= thumb.pos[1] + thumbSize[1]) {
         hitThumb = true;
         if (data.mode === 'shots') {
-          projectStore.setCurrentFrame(thumb.obj.startFrame);
+          emit('setCurrentFrame', thumb.obj.startFrame);
         } else {
-          projectStore.selectedAssets = [thumb.obj];
+          emit('setSelectedAssets', [thumb.obj]);
         }
         break;
       }
@@ -740,7 +745,7 @@ function onMouseEvent(event: MouseEvent) {
 
     if (!hitThumb) {
       if (data.mode === 'assets') {
-        projectStore.selectedAssets = [];
+        emit('setSelectedAssets', []);
       }
     }
   }
@@ -847,7 +852,7 @@ watch(
 )
 
 watch(
-  () => projectStore.timelineVisibleFrames,
+  () => props.runtimeState.timelineVisibleFrames,
   () => {
     if (data.seqFilterMode === 'showShotsInTimelineView') {
         refreshAndDraw();
@@ -932,7 +937,7 @@ watch(
 )
 
 watch(
-  () => projectStore.currentFrame,
+  () => props.runtimeState.currentFrame,
   () => {
     // Find the thumbnail that should be highlighted.
     data.thumbForCurrentFrame = findThumbnailForCurrentFrame();
@@ -956,14 +961,14 @@ watch(
 )
 
 watch(
-  () => projectStore.selectedAssets,
+  () => props.runtimeState.selectedAssets,
   () => {
     draw();
   }
 )
 
 watch(
-  () => projectStore.timelineCanvasHeightPx,
+  () => props.runtimeState.timelineCanvasHeightPx,
    () => {
     resizeCanvas();
   }

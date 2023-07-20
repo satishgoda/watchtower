@@ -10,10 +10,16 @@
 import videojs from 'video.js';
 import './../../node_modules/video.js/dist/video-js.css'
 import { reactive, ref, watch, onBeforeUnmount } from 'vue';
-import { useProjectStore } from "@/stores/project";
+import { useProjectStore } from '@/stores/project';
+import { RuntimeState } from '@/stores/runtimeState';
+
 const projectStore = useProjectStore();
 
 const videoPlayer = ref(null)
+
+const emit = defineEmits<{
+  (event: 'setCurrentFrame', frameNumber: number): void
+}>()
 
 interface Data {
   player?: videojs.Player
@@ -25,21 +31,19 @@ const data: Data = reactive({
   animationFrameQueue: undefined,
 })
 
-const props = defineProps({
-  videoPlayerOptions: {
-    type: Object,
-    default() {
-        return {};
-    }
-  }
-})
+const props = defineProps<{
+  runtimeState: RuntimeState
+  videoPlayerOptions?: any
+}>()
+
+
 
 // Watchers
 watch(
-  () => projectStore.isPlaying,
+  () => props.runtimeState.isPlaying,
   () => {
     if (!data.player) {return}
-    if (projectStore.isPlaying) {
+    if (props.runtimeState.isPlaying) {
       data.player.play()
     } else {
       data.player.pause();
@@ -48,7 +52,7 @@ watch(
 )
 
 watch(
-  () => projectStore.currentFrame,
+  () => props.runtimeState.currentFrame,
   () => {
     // If the player is not ready, or it is currently playing, do nothing.
     if (!data.player || !data.player.paused()) {
@@ -56,7 +60,7 @@ watch(
     }
 
     // Limit frame value to 0 or greater
-    const currentTime = Math.max(0, (projectStore.currentFrame - projectStore.frameOffset) / projectStore.fps);
+    const currentTime = Math.max(0, (props.runtimeState.currentFrame - projectStore.frameOffset) / projectStore.fps);
     data.player.currentTime(currentTime);
   }
 )
@@ -73,10 +77,10 @@ watch(
       })
       data.player.on('play', setCurrentFrameAndRequestAnimationFrame);
       // Update global isPlaying status
-      data.player.on('play', () => {projectStore.isPlaying = true});
+      data.player.on('play', () => {props.runtimeState.isPlaying = true});
       data.player.on('pause', cancelSetCurrentFrame);
       // Update global isPlaying status
-      data.player.on('pause', () => {projectStore.isPlaying = false});
+      data.player.on('pause', () => {props.runtimeState.isPlaying = false});
       data.player.on('seeking', setCurrentFrame);
     }
   }
@@ -84,8 +88,8 @@ watch(
 
 function setCurrentFrame() {
   if (!data.player) {return}
-  let currentFrame = data.player.currentTime() * projectStore.fps + projectStore.frameOffset;
-  projectStore.setCurrentFrame(Math.round(currentFrame));
+  const currentFrame = data.player.currentTime() * projectStore.fps + projectStore.frameOffset;
+  emit('setCurrentFrame', Math.round(currentFrame))
 }
 
 function setCurrentFrameAndRequestAnimationFrame() {
@@ -122,9 +126,11 @@ video {
   display: flex;
   opacity: 1;
 }
+
 .vjs-paused .vjs-big-play-button {
   display: none;
 }
+
 .video-js .vjs-control-bar {
   position: initial;
 }

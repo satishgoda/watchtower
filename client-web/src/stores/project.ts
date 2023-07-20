@@ -28,47 +28,9 @@ export const useProjectStore = defineStore('project', {
       preload: 'auto',
       sources: new Array<VideoSource>(),
     },
-    // Runtime state
-    isPlaying: false,
-    currentFrame: 0,
-    timelineVisibleFrames: [0, 1],
-    currentSequence: null as Sequence | null,
-    currentShot: null as Shot | null,
-    selectedAssets: new Array<Asset>(),
-    // Runtime UI settings
-    isShowingTimelineTasks: false,
-    isShowingTimelineAssets: true,
-    timelineCanvasHeightPx: 0,
+
   }),
   actions: {
-    setCurrentFrame: function (frameNumber: string|number) {
-      // Force frameNumber to be int. Since it comes from JSON metadata it could have
-      // accidentally been stored as a string. This is due to weak schema validation on Kitsu.
-
-      this.currentFrame  = typeof frameNumber === 'string' ? parseInt(frameNumber) : frameNumber
-
-      // Find the shot for the current frame (not necessarily visible as a thumbnail).
-      let shotForCurrentFrame = null;
-      for (const shot of this.shots) {
-        if (shot.startFrame > this.currentFrame) {
-          break;
-        }
-        shotForCurrentFrame = shot;
-      }
-      this.currentShot = shotForCurrentFrame;
-
-      // Find the corresponding sequence, if any.
-      let currSequence = null;
-      if (shotForCurrentFrame) {
-        for (const seq of this.sequences) {
-          if (seq.id === shotForCurrentFrame.sequence_id) {
-            currSequence = seq;
-            break;
-          }
-        }
-      }
-      this.currentSequence = currSequence;
-    },
     async fetchProjectData(projectId: string) {
       try {
         const context = await axios.get(dataUrls.getUrl(dataUrls.urlType.Context));

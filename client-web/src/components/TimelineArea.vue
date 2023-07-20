@@ -3,9 +3,9 @@
   .toolbar
     .toolbar-item
       span
-        input#showTasksStatus(type="checkbox" v-model="projectStore.isShowingTimelineTasks")
+        input#showTasksStatus(type="checkbox" v-model="props.runtimeState.isShowingTimelineTasks")
         label(for="showTasksStatus") Show Tasks Status
-      span(v-if="projectStore.selectedAssets.length")
+      span(v-if="props.runtimeState.selectedAssets.length")
         input#showSelectedAssets(type="checkbox" v-model="data.showSelectedAssets")
         label(for="showSelectedAssets") Show Selected Assets
       button(@click="fitTimelineView") Fit View
@@ -24,9 +24,19 @@
 
 import { UIRenderer } from 'uirenderer-canvas';
 import { useProjectStore } from '@/stores/project';
-import {reactive, ref, computed, watch, onMounted, onUnmounted} from 'vue';
+import { reactive, ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { RuntimeState } from '@/stores/runtimeState';
 
 const projectStore = useProjectStore();
+
+const emit = defineEmits<{
+  (event: 'setCurrentFrame', frameNumber: number): void
+  (event: 'setTimelineCanvasHeightPx', height: number): void
+}>()
+
+const props = defineProps<{
+  runtimeState: RuntimeState
+}>()
 
 const canvasTimelineContainer = ref(null);
 
@@ -131,8 +141,8 @@ function resizeCanvas(shouldDraw=true) {
   const canvasContainer = document.getElementById('canvas-timeline-container');
   if (!data.canvas || !data.canvasText || !canvasContainer) {return}
   let numChannels = 0;
-  if (data.showSelectedAssets) { numChannels += projectStore.selectedAssets.length; }
-  if (projectStore.isShowingTimelineTasks) { numChannels += taskTypesForShots.value.length; }
+  if (data.showSelectedAssets) { numChannels += props.runtimeState.selectedAssets.length; }
+  if (props.runtimeState.isShowingTimelineTasks) { numChannels += taskTypesForShots.value.length; }
   data.canvas.width = canvasContainer.offsetWidth;
   data.canvas.height = uiConfig.margin.top
       + uiConfig.sequences.channelHeight
@@ -142,7 +152,7 @@ function resizeCanvas(shouldDraw=true) {
 
   data.canvasText.width = data.canvas.width;
   data.canvasText.height = data.canvas.height;
-  projectStore.timelineCanvasHeightPx = data.canvas.height;
+  emit('setTimelineCanvasHeightPx', data.canvas.height);
 
   // Store the view window before the resize. Pan and zoom will be preserved.
   const offset = data.timelineView.x - data.timelineRange.x; // Pan.
@@ -276,7 +286,7 @@ function draw() {
   // Draw selected assets.
   channelY = channelStartY + channelContentPadY;
   if (data.showSelectedAssets) {
-    for (const asset of projectStore.selectedAssets) {
+    for (const asset of props.runtimeState.selectedAssets) {
       // Get the contiguous frame ranges where this asset appears.
       let {startPos, widths} = getRangesWhere((shot: Shot) => { return shot.asset_ids.includes(asset.id); });
       // Draw a rect for each range of shots.
@@ -288,7 +298,7 @@ function draw() {
   }
 
   // Draw task statuses.
-  if (projectStore.isShowingTimelineTasks) {
+  if (props.runtimeState.isShowingTimelineTasks) {
     for (const taskType of taskTypesForShots.value) { // e.g. "Animation"
       for (const status of projectStore.taskStatuses) { // e.g. "Done"
         // Get the contiguous frame ranges for this task status.
@@ -318,7 +328,7 @@ function draw() {
     // Find continuous ranges of shots that belong to this sequence.
     // In theory, a sequence has a single contiguous range, but in practice,
     // there might shots mistakenly assigned to sequences or shots missing.
-    let {startPos, widths} = getRangesWhere((shot: Shot) => sequence.id === shot.sequence_id);
+    const {startPos, widths} = getRangesWhere((shot: Shot) => sequence.id === shot.sequence_id);
     // Draw a rect for each range of shots belonging to this sequence.
     for (let i = 0; i < startPos.length; i++) {
       ui.addRect(startPos[i], seqTop, widths[i], seqHeight, sequence.color, seqCorner);
@@ -353,7 +363,7 @@ function draw() {
   // Playhead
   // Update the playhead position according to the current frame.
   // The playhead position moves with the current zoom and pan, but the playhead geometry is unscaled.
-  const playheadPos = view.transformPosX(timelineX + projectStore.currentFrame / projectStore.totalFrames * timelineW);
+  const playheadPos = view.transformPosX(timelineX + props.runtimeState.currentFrame / projectStore.totalFrames * timelineW);
   if (playheadPos >= view.left && playheadPos <= view.right) {
     const playhead = uiConfig.playhead;
     const triangle = uiConfig.playhead.triangle;
@@ -403,12 +413,12 @@ function draw() {
   data.ui2D.fillText('Shots', textX, textY);
   textY = channelStartY + Math.round(channelStep / 2) - halfFontSize;
   if (data.showSelectedAssets) {
-    for (const asset of projectStore.selectedAssets) {
+    for (const asset of props.runtimeState.selectedAssets) {
       data.ui2D.fillText(asset.name, textX, textY);
       textY += channelStep;
     }
   }
-  if (projectStore.isShowingTimelineTasks) {
+  if (props.runtimeState.isShowingTimelineTasks) {
     for (const task of taskTypesForShots.value) {
       data.ui2D.fillText(task.name, textX, textY);
       textY += channelStep;
@@ -459,7 +469,7 @@ function getRangesWhere(hasProp: Function) {
 function findShotForCurrentFrame() {
   let shotForCurrentFrame = null;
   for (const shot of projectStore.shots) {
-    if(shot.startFrame > projectStore.currentFrame)
+    if(shot.startFrame > props.runtimeState.currentFrame)
       break;
     shotForCurrentFrame = shot;
   }
@@ -469,7 +479,7 @@ function findShotForCurrentFrame() {
 function onVisibleFrameRangeUpdated() {
   const startFrame = pxToFrame(data.timelineRange.x);
   const endFrame = pxToFrame(data.timelineRange.x + data.timelineRange.w);
-  projectStore.timelineVisibleFrames = [startFrame, endFrame];
+  props.runtimeState.timelineVisibleFrames = [startFrame, endFrame];
 
   draw();
 }
@@ -525,7 +535,7 @@ function onMouseEvent(event: MouseEvent) {
   if (data.isMouseDragging.LMB
     && (event.type === 'mousemove' || event.type === 'mouseup')) {
     const mouse = clientToCanvasCoords(event);
-    projectStore.setCurrentFrame(pxToFrame(mouse.x));
+    emit('setCurrentFrame', pxToFrame(mouse.x))
   }
 
   // Pan when MMB dragging.
@@ -574,29 +584,29 @@ function onKeyDown(event: KeyboardEvent) {
     if (!data.shotForCurrentFrame) {return}
     const idx = projectStore.shots.indexOf(data.shotForCurrentFrame);
     const newIdx = Math.min(projectStore.shots.length, (idx === -1) ? 0 : idx + 1);
-    projectStore.setCurrentFrame(projectStore.shots[newIdx].startFrame);
+    emit('setCurrentFrame', projectStore.shots[newIdx].startFrame)
   } else if (event.key === 'ArrowLeft') {
     if (!data.shotForCurrentFrame) {return}
     const idx = projectStore.shots.indexOf(data.shotForCurrentFrame);
     const newIdx = Math.max(0, (idx === -1) ? 0 : idx - 1);
-    projectStore.setCurrentFrame(projectStore.shots[newIdx].startFrame);
+    emit('setCurrentFrame', projectStore.shots[newIdx].startFrame)
   }
 }
 
 // Watchers
 
-watch(() => projectStore.isShowingTimelineTasks, onChannelsUpdated)
+watch(() => props.runtimeState.isShowingTimelineTasks, onChannelsUpdated)
 watch(() => data.showSelectedAssets, onChannelsUpdated)
 watch(() => projectStore.taskTypes, onChannelsUpdated)
 watch(() => projectStore.taskStatuses, draw)
 watch(() => projectStore.sequences, draw)
 watch(() => projectStore.shots, draw)
 watch(() => projectStore.assets, onChannelsUpdated)
-watch(() => projectStore.selectedAssets, onChannelsUpdated)
+watch(() => props.runtimeState.selectedAssets, onChannelsUpdated)
 watch(() => projectStore.totalFrames, onVisibleFrameRangeUpdated)
 watch(() => data.timelineView, onVisibleFrameRangeUpdated)
 watch(
-  () => projectStore.currentFrame,
+  () => props.runtimeState.currentFrame,
   () => {
     // Find the shot that should be highlighted.
     findShotForCurrentFrame();

@@ -2,7 +2,10 @@
 .project-detail
   #row-thumbnails
     .section-thumbnailview
-      ThumbnailArea
+      ThumbnailArea(
+        @set-current-frame="setCurrentFrame"
+        :runtime-state="runtimeState"
+        )
     .section-inspector
       section.inspector-videoplayer
         .player-header
@@ -16,7 +19,10 @@
               | {{ projectStore.currentShot.name }}
           .toolbar-item.right(title="Frame Number")
             | {{ projectStore.currentFrame }}
-        VideoPlayer
+        VideoPlayer(
+          @set-current-frame="setCurrentFrame"
+          :runtime-state="runtimeState"
+          )
 
       section.inspector-details(v-if="projectStore.currentShot")
         h5.section-headline SHOT
@@ -28,26 +34,69 @@
           li Tasks: {{ projectStore.currentShot.tasks.length }}
   .row-timeline
     .col-12
-      TimelineArea
+      TimelineArea(
+        @set-current-frame="setCurrentFrame"
+        @set-timeline-canvas-height-px="setTimelineCanvasHeightPx"
+        :runtime-state="runtimeState"
+        )
 
 
 </template>
 
 <script setup lang="ts">
-import {onMounted, onBeforeUnmount, computed} from 'vue';
+import {onMounted, onBeforeUnmount, computed, reactive} from 'vue';
 import { useRoute } from 'vue-router';
 import { useProjectStore } from '@/stores/project';
+import { RuntimeState } from '@/stores/runtimeState';
 import ThumbnailArea from '@/components/ThumbnailArea.vue';
-import VideoPlayer from "@/components/VideoPlayer.vue";
-import TimelineArea from "@/components/TimelineArea.vue";
+import VideoPlayer from '@/components/VideoPlayer.vue';
+import TimelineArea from '@/components/TimelineArea.vue';
 
 const projectStore = useProjectStore();
 const route = useRoute();
 projectStore.initWithProject(route.params.projectId);
 
+
+
+// Runtime state
+const runtimeState = reactive(new RuntimeState());
+
+function setCurrentFrame(frameNumber: string|number) {
+  // Force frameNumber to be int. Since it comes from JSON metadata it could have
+  // accidentally been stored as a string. This is due to weak schema validation on Kitsu.
+  // TODO: remove this casting and rely on our own data system instead
+  runtimeState.currentFrame  = typeof frameNumber === 'string' ? parseInt(frameNumber) : frameNumber
+
+  // Find the shot for the current frame (not necessarily visible as a thumbnail).
+  let shotForCurrentFrame = null;
+  for (const shot of projectStore.shots) {
+    if (shot.startFrame > runtimeState.currentFrame) {
+      break;
+    }
+    shotForCurrentFrame = shot;
+  }
+  runtimeState.currentShot = shotForCurrentFrame;
+
+  // Find the corresponding sequence, if any.
+  let currSequence = null;
+  if (shotForCurrentFrame) {
+    for (const seq of projectStore.sequences) {
+      if (seq.id === shotForCurrentFrame.sequence_id) {
+        currSequence = seq;
+        break;
+      }
+    }
+  }
+  runtimeState.currentSequence = currSequence;
+}
+
+function setTimelineCanvasHeightPx(height: number) {
+  runtimeState.timelineCanvasHeightPx = height;
+}
+
 function handleHotkey(event: KeyboardEvent) {
   if (event.code === 'Space') {
-    projectStore.isPlaying = !projectStore.isPlaying;
+    runtimeState.isPlaying = !runtimeState.isPlaying;
   }
 }
 
@@ -66,7 +115,7 @@ function uiCurrentSequenceColor(color: [number, number, number]) {
 
 // Computed props
 const cssTimelineHeight = computed(() => {
-  return `${projectStore.timelineCanvasHeightPx + 33}px`
+  return `${runtimeState.timelineCanvasHeightPx + 33}px`
 })
 
 </script>
@@ -87,7 +136,6 @@ const cssTimelineHeight = computed(() => {
 
 .row-timeline {
   height: v-bind(cssTimelineHeight);
-
 }
 
 .current-sequence-indicator {
