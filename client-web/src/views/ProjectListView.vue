@@ -11,8 +11,8 @@
 </template>
 
 <script setup lang="ts">
-  import { useContextStore } from "@/stores/context";
-  const contextStore = useContextStore();
+  import { useProjectsStore } from "@/stores/projects";
+  const contextStore = useProjectsStore();
 </script>
 
 <style scoped>

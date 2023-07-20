@@ -24,12 +24,12 @@
 
 import { RouterLink, useRouter } from 'vue-router';
 import {ref, watch} from 'vue';
-import { useContextStore } from "@/stores/context";
+import { useProjectsStore } from "@/stores/projects";
 import { useProjectStore } from '@/stores/project';
 
 const router = useRouter();
 const projectStore = useProjectStore();
-const contextStore = useContextStore();
+const contextStore = useProjectsStore();
 contextStore.fetchAndInitContext();
 
 const currentProjectSelected = ref();
