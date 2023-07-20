@@ -2,8 +2,8 @@
 .dashboard
   h2 Dashboard
   p Your projects:
-  ul.projects-list(v-if='contextStore.projects')
-    li(v-for='project in contextStore.projects' :key='project.id')
+  ul.projects-list(v-if='projects')
+    li(v-for='project in projects' :key='project.id')
       router-link(:to="{ name: 'pro', params: { projectId: project.id }}")
         img.project-thumbnail(:src='project.thumbnailUrl' :alt='project.name')
         h3 {{ project.name }}
@@ -11,8 +11,9 @@
 </template>
 
 <script setup lang="ts">
-  import { useProjectsStore } from "@/stores/projects";
-  const contextStore = useProjectsStore();
+  const props = defineProps<{
+    projects: []
+  }>()
 </script>
 
 <style scoped>

@@ -1,13 +1,13 @@
 <template lang="pug">
 .app-toolbar
   select.ml-4.mt-2(
-    v-if="contextStore.projects"
+    v-if="projects"
     v-show="router.currentRoute.value.name === 'pro'"
     @change="switchToProject"
     v-model="currentProjectSelected"
     )
     option(
-      v-for="project in contextStore.projects"
+      v-for="project in projects"
       :key="project.id"
       :value="project.id"
       )
@@ -24,15 +24,15 @@
 
 import { RouterLink, useRouter } from 'vue-router';
 import {ref, watch} from 'vue';
-import { useProjectsStore } from "@/stores/projects";
+
 import { useProjectStore } from '@/stores/project';
 
 const router = useRouter();
 const projectStore = useProjectStore();
-const contextStore = useProjectsStore();
-contextStore.fetchAndInitContext();
-
 const currentProjectSelected = ref();
+const props = defineProps<{
+  projects: []
+}>()
 
 watch(() => projectStore.id, (id) => {currentProjectSelected.value = id})
 

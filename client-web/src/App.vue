@@ -1,11 +1,15 @@
 <template lang="pug">
 .app-container
-  TheNavbar
-  RouterView
+  TheNavbar(:projects="projectsStore.data.projects")
+  RouterView(:projects="projectsStore.data.projects")
 </template>
 
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
+import { useProjectsStore } from "@/stores/projects";
 import TheNavbar from "@/components/TheNavbar.vue";
+
+const projectsStore = new useProjectsStore();
+projectsStore.fetchAndInitContext();
 
 </script>
