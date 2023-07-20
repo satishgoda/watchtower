@@ -1,14 +1,3 @@
-type XWTuple = {
-  x: number;
-  w: number;
-}
-
-type XYTuple = {
-  x: number;
-  y: number;
-}
-
-
 type Task = {
   task_status_id: string;
   task_type_id: string;
