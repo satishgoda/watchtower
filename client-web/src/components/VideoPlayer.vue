@@ -10,29 +10,26 @@
 import videojs from 'video.js';
 import './../../node_modules/video.js/dist/video-js.css'
 import { reactive, ref, watch, onBeforeUnmount } from 'vue';
-import { useProjectStore } from '@/stores/project';
 import { RuntimeState } from '@/stores/runtimeState';
-
-const projectStore = useProjectStore();
+import {DataProjectStore} from '@/stores/project';
 
 const videoPlayer = ref(null)
 
 const emit = defineEmits<{
   (event: 'setCurrentFrame', frameNumber: number): void
+  (event: 'setIsPlaying', isPlaying: boolean): void
 }>()
 
-interface Data {
+class Data {
   player?: videojs.Player
-  animationFrameQueue?: number
+  animationFrameQueue = 0
 }
 
-const data: Data = reactive({
-  player: undefined,
-  animationFrameQueue: undefined,
-})
+const data = reactive(new Data());
 
 const props = defineProps<{
   runtimeState: RuntimeState
+  projectStore: DataProjectStore
   videoPlayerOptions?: any
 }>()
 
@@ -60,27 +57,28 @@ watch(
     }
 
     // Limit frame value to 0 or greater
-    const currentTime = Math.max(0, (props.runtimeState.currentFrame - projectStore.frameOffset) / projectStore.fps);
+    const currentTime = Math.max(0, (props.runtimeState.currentFrame - props.projectStore.frameOffset) / props.projectStore.fps);
     data.player.currentTime(currentTime);
   }
 )
 
 watch(
-  () => projectStore.videoPlayerOptions.sources,
+  () => props.projectStore.videoPlayerOptions.sources,
   () => {
     if (data.player) {
       // data.player.dispose()
-      data.player.options_.sources = projectStore.videoPlayerOptions.sources;
+      data.player.options_.sources = props.projectStore.videoPlayerOptions.sources;
     } else {
-      data.player = videojs(videoPlayer.value, projectStore.videoPlayerOptions, function onPlayerReady() {
+      if (!videoPlayer.value) {return}
+      data.player = videojs(videoPlayer.value, props.projectStore.videoPlayerOptions, function onPlayerReady() {
         console.log('Player is ready');
       })
       data.player.on('play', setCurrentFrameAndRequestAnimationFrame);
       // Update global isPlaying status
-      data.player.on('play', () => {props.runtimeState.isPlaying = true});
+      data.player.on('play', () => {emit('setIsPlaying', true)});
       data.player.on('pause', cancelSetCurrentFrame);
       // Update global isPlaying status
-      data.player.on('pause', () => {props.runtimeState.isPlaying = false});
+      data.player.on('pause', () => {emit('setIsPlaying', false)});
       data.player.on('seeking', setCurrentFrame);
     }
   }
@@ -88,7 +86,7 @@ watch(
 
 function setCurrentFrame() {
   if (!data.player) {return}
-  const currentFrame = data.player.currentTime() * projectStore.fps + projectStore.frameOffset;
+  const currentFrame = data.player.currentTime() * props.projectStore.fps + props.projectStore.frameOffset;
   emit('setCurrentFrame', Math.round(currentFrame))
 }
 
@@ -99,6 +97,7 @@ function setCurrentFrameAndRequestAnimationFrame() {
 }
 
 function cancelSetCurrentFrame() {
+  if (!data.player) {return}
   data.player.cancelAnimationFrame(data.animationFrameQueue);
 }
 

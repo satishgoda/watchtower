@@ -38,8 +38,12 @@
         option(v-if="data.mode === 'assets'" value='groupByAssetType') Asset Type
         option(v-if="data.taskTypeFilter !== ''" value='groupByTaskStatus') Task Status
         option(v-if="data.taskTypeFilter !== ''" value='groupByAssignee') Assignee
-  canvas#canvas-thumb-grid
-  canvas#canvas-thumb-grid-text(
+  canvas(
+    id="canvas-thumb-grid"
+    ref="canvasThumbGrid")
+  canvas(
+    id="canvas-thumb-grid-text"
+    ref="canvasThumbGridText"
     @mousedown="onMouseEvent($event)"
     @mouseup='onMouseEvent($event)'
     @mousemove='onMouseEvent($event)'
@@ -51,9 +55,12 @@
 
 <script setup lang="ts">
 import { UIRenderer, UILayout } from 'uirenderer-canvas';
-import { useProjectStore } from '@/stores/project';
-import { reactive, computed, watch, onMounted, nextTick } from 'vue';
+import { DataProjectStore } from '@/stores/project';
+import { reactive, computed, watch, onMounted, nextTick, ref } from 'vue';
 import { RuntimeState } from '@/stores/runtimeState';
+
+const canvasThumbGrid = ref(null)
+const canvasThumbGridText = ref(null)
 
 const emit = defineEmits<{
   (event: 'setCurrentFrame', frameNumber: number): void
@@ -61,10 +68,9 @@ const emit = defineEmits<{
 }>()
 
 const props = defineProps<{
-  runtimeState: RuntimeState
+  runtimeState: RuntimeState,
+  projectStore: DataProjectStore, // this is actually reactive(DataProjectStore)
 }>()
-
-const projectStore = useProjectStore();
 
 class Data {
   mode = 'shots';
@@ -126,20 +132,19 @@ const uiConfig =  {
 
 // Computed props
 const taskTypesForShots = computed(() => {
-  return projectStore.taskTypes.filter(taskType => taskType.for_shots === true);
+  return props.projectStore.taskTypes.filter(taskType => taskType.for_shots === true);
 })
 
 const taskTypesForAssets = computed(() => {
-  return projectStore.taskTypes.filter(taskType => taskType.for_shots === false);
+  return props.projectStore.taskTypes.filter(taskType => taskType.for_shots === false);
 })
 
 const taskTypesForMode = computed(() => {
   const showShots = (data.mode === 'shots');
-  return projectStore.taskTypes.filter(taskType => taskType.for_shots === showShots);
+  return props.projectStore.taskTypes.filter(taskType => taskType.for_shots === showShots);
 })
 
 // Methods
-
 function getCanvasRect() {
   return data.canvas!.getBoundingClientRect();
 }
@@ -173,10 +178,10 @@ async function resizeCanvas(shouldDraw=true) {
 }
 
 function initCanvas() {
-  data.canvas = document.getElementById('canvas-thumb-grid') as HTMLCanvasElement;
+  data.canvas = canvasThumbGrid.value! as HTMLCanvasElement;
   data.uiRenderer = new UIRenderer(data.canvas, draw);
 
-  data.canvasText = document.getElementById('canvas-thumb-grid-text') as HTMLCanvasElement;
+  data.canvasText = canvasThumbGridText.value! as HTMLCanvasElement;
   data.ui2D = data.canvasText.getContext('2d');
 
   // Resize the canvas to fill browser window dynamically
@@ -214,9 +219,9 @@ function draw() {
   // If the resulting layout makes the images too small, skip rendering.
   let hasProblemMsg = null;
   const thumbSize = data.thumbnailSize;
-  if (!projectStore.shots.length && data.mode === 'shots') {
+  if (!props.projectStore.shots.length && data.mode === 'shots') {
     hasProblemMsg = 'No shots loaded';
-  } else if (!projectStore.assets.length && data.mode === 'assets') {
+  } else if (!props.projectStore.assets.length && data.mode === 'assets') {
     hasProblemMsg = 'No assets loaded';
   } else if (thumbSize[0] <= 5 || thumbSize[1] <= 5) {
     hasProblemMsg = 'Out of space';
@@ -310,7 +315,7 @@ function draw() {
           for (const taskStatus of thumb.obj.tasks) {
             if (taskStatus.task_type_id === taskType.id) {
               // It does, get the color for the status of this task.
-              for (const status of projectStore.taskStatuses) { // e.g. "Done"
+              for (const status of props.projectStore.taskStatuses) { // e.g. "Done"
                 if (taskStatus.task_status_id === status.id) {
                   if (data.statusDispMode === 'dots') {
                     ui.addCircle([thumb.pos[0] + offsetW, thumb.pos[1] + offsetH], statusRadius, status.color);
@@ -352,8 +357,8 @@ function draw() {
             if (taskStatus.task_type_id === taskType.id) {
               // It does, get the assignee(s).
               for (let aIdx = 0; aIdx < taskStatus.assignees.length; aIdx++) {
-                for (let i = 0; i < projectStore.team.length; i++) {
-                  if (taskStatus.assignees[aIdx] === projectStore.team[i].id) {
+                for (let i = 0; i < props.projectStore.team.length; i++) {
+                  if (taskStatus.assignees[aIdx] === props.projectStore.team[i].id) {
                     ui.addImageFromBundle(
                       thumb.pos[0] + offsetW - aIdx * stepX, thumb.pos[1] + offsetH,
                       avatarSize, avatarSize,
@@ -437,7 +442,7 @@ function getFilteredShots() {
       if (data.seqFilterMode === 'showActiveSequence') {
         // Get the shots associated with the active sequence.
         if (data.activeSequence) {
-          for (const shot of projectStore.shots) {
+          for (const shot of props.projectStore.shots) {
             if (shot.sequence_id === data.activeSequence.id) {
               filtered_shots.push(shot);
             }
@@ -445,8 +450,8 @@ function getFilteredShots() {
         }
       } else if (data.seqFilterMode === 'showShotsInTimelineView') {
         // Get the shots that are visible in the timeline.
-        for (const shot of projectStore.shots) {
-          const lastShotFrame = shot.startFrame + shot.durationSeconds * projectStore.fps;
+        for (const shot of props.projectStore.shots) {
+          const lastShotFrame = shot.startFrame + shot.durationSeconds * props.projectStore.fps;
           if (lastShotFrame > props.runtimeState.timelineVisibleFrames[0]
               && shot.startFrame < props.runtimeState.timelineVisibleFrames[1]) {
             filtered_shots.push(shot);
@@ -467,8 +472,8 @@ function filterThumbnails() {
     if (data.seqFilterMode === 'showActiveSequence') {
       if (data.activeSequence) {
         // Show the shots associated with the active sequence.
-        for (let i = 0; i < projectStore.shots.length; i++) {
-          const shot = projectStore.shots[i];
+        for (let i = 0; i < props.projectStore.shots.length; i++) {
+          const shot = props.projectStore.shots[i];
           if (shot.sequence_id === data.activeSequence.id) {
             data.thumbnails.push(new UILayout.ThumbnailImage(shot, i));
           }
@@ -476,9 +481,9 @@ function filterThumbnails() {
       }
     } else if (data.seqFilterMode === 'showShotsInTimelineView') {
       // Show only shots that are visible in the timeline.
-      for (let i = 0; i < projectStore.shots.length; i++) {
-        const shot = projectStore.shots[i];
-        const lastShotFrame = shot.startFrame + shot.durationSeconds * projectStore.fps;
+      for (let i = 0; i < props.projectStore.shots.length; i++) {
+        const shot = props.projectStore.shots[i];
+        const lastShotFrame = shot.startFrame + shot.durationSeconds * props.projectStore.fps;
         if (lastShotFrame > props.runtimeState.timelineVisibleFrames[0]
             && shot.startFrame < props.runtimeState.timelineVisibleFrames[1]) {
           data.thumbnails.push(new UILayout.ThumbnailImage(shot, i));
@@ -486,8 +491,8 @@ function filterThumbnails() {
       }
     } else {
       // Show all the shots.
-      for (let i = 0; i < projectStore.shots.length; i++) {
-        data.thumbnails.push(new UILayout.ThumbnailImage(projectStore.shots[i], i));
+      for (let i = 0; i < props.projectStore.shots.length; i++) {
+        data.thumbnails.push(new UILayout.ThumbnailImage(props.projectStore.shots[i], i));
       }
     }
 
@@ -495,19 +500,19 @@ function filterThumbnails() {
 
     if (data.seqFilterMode === 'showAll') {
       // Show all the assets.
-      for (let i = 0; i < projectStore.assets.length; i++) {
-        data.thumbnails.push(new UILayout.ThumbnailImage(projectStore.assets[i], i));
+      for (let i = 0; i < props.projectStore.assets.length; i++) {
+        data.thumbnails.push(new UILayout.ThumbnailImage(props.projectStore.assets[i], i));
       }
     } else {
       // Find which shots to filter by.
       const filtered_shots = getFilteredShots();
 
       // Create a thumbnail for each asset to be shown.
-      for (let i = 0; i < projectStore.assets.length; i++) {
+      for (let i = 0; i < props.projectStore.assets.length; i++) {
         let is_asset_used_in_a_filtered_shot = false;
         for (const shot of filtered_shots) {
           for (const cast_asset of shot.asset_ids) {
-            if (projectStore.assets[i].id === cast_asset) {
+            if (props.projectStore.assets[i].id === cast_asset) {
               is_asset_used_in_a_filtered_shot = true;
               break;
             }
@@ -515,7 +520,7 @@ function filterThumbnails() {
           if (is_asset_used_in_a_filtered_shot) { break; }
         }
         if (is_asset_used_in_a_filtered_shot) {
-          data.thumbnails.push(new UILayout.ThumbnailImage(projectStore.assets[i], i));
+          data.thumbnails.push(new UILayout.ThumbnailImage(props.projectStore.assets[i], i));
         }
       }
 
@@ -548,10 +553,10 @@ function refreshThumbnailGroups() {
   // Create the thumbnail groups.
   const thumbGroups = [];
   const groupObjs =
-    groupBySequence ? projectStore.sequences :
-    groupByAssetType ? projectStore.assetTypes :
-    groupByStatus ? projectStore.taskStatuses :
-    /* groupByAssignee */ projectStore.team;
+    groupBySequence ? props.projectStore.sequences :
+    groupByAssetType ? props.projectStore.assetTypes :
+    groupByStatus ? props.projectStore.taskStatuses :
+    /* groupByAssignee */ props.projectStore.team;
   for (const obj of groupObjs) {
     thumbGroups.push(new UILayout.ThumbnailGroup(obj.name, obj.color, obj));
   }
@@ -696,7 +701,7 @@ function findThumbnailForCurrentFrame() {
 function findShotForCurrentFrame() {
   // Find the shot for the current frame (not necessarily visible as a thumbnail).
   let shotForCurrentFrame = null;
-  for (const shot of projectStore.shots) {
+  for (const shot of props.projectStore.shots) {
     if (shot.startFrame > props.runtimeState.currentFrame) {
       break;
     }
@@ -712,7 +717,7 @@ function findSequenceForCurrentFrame() {
   // Find the corresponding sequence, if any.
   let currSequence = null;
   if (shotForCurrentFrame) {
-    for (const seq of projectStore.sequences) {
+    for (const seq of props.projectStore.sequences) {
       if (seq.id === shotForCurrentFrame.sequence_id) {
         currSequence = seq;
         break;
@@ -735,6 +740,7 @@ function onMouseEvent(event: MouseEvent) {
         && thumb.pos[1] <= mouse.y && mouse.y <= thumb.pos[1] + thumbSize[1]) {
         hitThumb = true;
         if (data.mode === 'shots') {
+          console.log(thumb.obj.startFrame);
           emit('setCurrentFrame', thumb.obj.startFrame);
         } else {
           emit('setSelectedAssets', [thumb.obj]);
@@ -787,7 +793,7 @@ watch(
       if (data.displayMode === 'groupByAssetType') {
         data.displayMode = 'groupBySequence';
       }
-      // projectStore.selectedAssets = [];
+      // props.projectStore.selectedAssets = [];
     }
     refreshAndDraw();
   }
@@ -805,7 +811,7 @@ watch(
   () => {
     // Find task type object and cache it.
     let taskType = null;
-    for (const type of projectStore.taskTypes) { // e.g. "Animation"
+    for (const type of props.projectStore.taskTypes) { // e.g. "Animation"
       if (data.taskTypeFilter === type.id) {
         taskType = type;
         break;
@@ -861,21 +867,21 @@ watch(
 )
 
 watch(
-  () => projectStore.taskTypes,
+  () => props.projectStore.taskTypes,
   () => {
     refreshAndDraw();
   }
 )
 
 watch(
-  () => projectStore.taskStatuses,
+  () => props.projectStore.taskStatuses,
   () => {
     refreshAndDraw();
   }
 )
 
 watch(
-  () => projectStore.team,
+  () => props.projectStore.team,
   (users) => {
 
     if (users.length) {
@@ -892,14 +898,14 @@ watch(
 )
 
 watch(
-  () => projectStore.sequences,
+  () => props.projectStore.sequences,
   () => {
     refreshAndDraw();
   }
 )
 
 watch(
-  () => projectStore.shots,
+  () => props.projectStore.shots,
   (shots) => {
     if (shots.length) {
         const thumb_size: [number, number] = [150, 100] ; // [1920, 1080];// WIP
@@ -917,7 +923,7 @@ watch(
 )
 
 watch(
-  () => projectStore.assets,
+  () => props.projectStore.assets,
   (assets) => {
     if (assets.length) {
       // Use explicit typing here to prevent TS complaints

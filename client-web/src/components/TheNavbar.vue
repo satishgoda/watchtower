@@ -25,21 +25,24 @@
 import { RouterLink, useRouter } from 'vue-router';
 import {ref, watch} from 'vue';
 
-import { useProjectStore } from '@/stores/project';
-
 const router = useRouter();
-const projectStore = useProjectStore();
 const currentProjectSelected = ref();
 const props = defineProps<{
-  projects: []
+  projects: [],
+  activeProjectId: '',
 }>()
 
-watch(() => projectStore.id, (id) => {currentProjectSelected.value = id})
+const emit = defineEmits<{
+  (event: 'setActiveProjectId', projectId: string): void
+}>()
+
+
+watch(() => props.activeProjectId, (projectId) => {currentProjectSelected.value = projectId})
 
 function switchToProject(event: Event) {
   const projectId = (event.target as HTMLInputElement).value;
   router.push({ name: 'pro', params: { projectId: projectId } })
-  projectStore.initWithProject(projectId);
+  emit('setActiveProjectId', projectId);
 }
 
 

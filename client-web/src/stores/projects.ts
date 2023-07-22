@@ -7,7 +7,10 @@ Store global list of projects.
 Used in TheNavbar component and in ProjectListView.
  */
 export class useProjectsStore {
-  data = reactive({projects: []});
+  data = reactive({
+    projects: [],
+    activeProjectId: '',
+  });
   async fetchAndInitContext() {
     try {
       const response = await axios.get(dataUrls.getUrl(dataUrls.urlType.Context));

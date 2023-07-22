@@ -15,7 +15,9 @@ const router = createRouter({
       component: () => import('../views/AboutView.vue')
     },
     {
+      // non-repeatable, projectId param is `string`
       path: '/pro/:projectId',
+      strict: true,
       name: 'pro',
       component: () => import('../views/ProjectDetailView.vue')
     }

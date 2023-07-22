@@ -5,6 +5,7 @@
       ThumbnailArea(
         @set-current-frame="setCurrentFrame"
         :runtime-state="runtimeState"
+        :project-store="projectStore.data"
         )
     .section-inspector
       section.inspector-videoplayer
@@ -21,7 +22,9 @@
             | {{ projectStore.currentFrame }}
         VideoPlayer(
           @set-current-frame="setCurrentFrame"
+          @set-is-playing="setIsPlaying"
           :runtime-state="runtimeState"
+          :project-store="projectStore.data"
           )
 
       section.inspector-details(v-if="projectStore.currentShot")
@@ -34,29 +37,41 @@
           li Tasks: {{ projectStore.currentShot.tasks.length }}
   .row-timeline
     .col-12
+
       TimelineArea(
         @set-current-frame="setCurrentFrame"
         @set-timeline-canvas-height-px="setTimelineCanvasHeightPx"
         :runtime-state="runtimeState"
+        :project-store="projectStore.data"
         )
+
 
 
 </template>
 
 <script setup lang="ts">
-import {onMounted, onBeforeUnmount, computed, reactive} from 'vue';
+import {onMounted, onBeforeUnmount, computed, reactive, watch} from 'vue';
 import { useRoute } from 'vue-router';
-import { useProjectStore } from '@/stores/project';
+import {DataProjectStore, useProjectStore} from '@/stores/project';
 import { RuntimeState } from '@/stores/runtimeState';
 import ThumbnailArea from '@/components/ThumbnailArea.vue';
 import VideoPlayer from '@/components/VideoPlayer.vue';
 import TimelineArea from '@/components/TimelineArea.vue';
 
-const projectStore = useProjectStore();
+const projectStore = new useProjectStore();
 const route = useRoute();
-projectStore.initWithProject(route.params.projectId);
+const projectId = route.params.projectId as string;
+projectStore.initWithProject(projectId);
 
+const emit = defineEmits<{
+  (event: 'setActiveProjectId', projectId: string): void
+}>()
 
+const props = defineProps<{
+  activeProjectId: string
+}>()
+
+emit('setActiveProjectId', projectId)
 
 // Runtime state
 const runtimeState = reactive(new RuntimeState());
@@ -69,7 +84,7 @@ function setCurrentFrame(frameNumber: string|number) {
 
   // Find the shot for the current frame (not necessarily visible as a thumbnail).
   let shotForCurrentFrame = null;
-  for (const shot of projectStore.shots) {
+  for (const shot of projectStore.data.shots) {
     if (shot.startFrame > runtimeState.currentFrame) {
       break;
     }
@@ -80,7 +95,7 @@ function setCurrentFrame(frameNumber: string|number) {
   // Find the corresponding sequence, if any.
   let currSequence = null;
   if (shotForCurrentFrame) {
-    for (const seq of projectStore.sequences) {
+    for (const seq of projectStore.data.sequences) {
       if (seq.id === shotForCurrentFrame.sequence_id) {
         currSequence = seq;
         break;
@@ -88,6 +103,10 @@ function setCurrentFrame(frameNumber: string|number) {
     }
   }
   runtimeState.currentSequence = currSequence;
+}
+
+function setIsPlaying(isPlaying: boolean) {
+  runtimeState.isPlaying = isPlaying;
 }
 
 function setTimelineCanvasHeightPx(height: number) {
@@ -117,6 +136,10 @@ function uiCurrentSequenceColor(color: [number, number, number]) {
 const cssTimelineHeight = computed(() => {
   return `${runtimeState.timelineCanvasHeightPx + 33}px`
 })
+
+
+// Watchers
+watch(() => props.activeProjectId, (projectId) => {projectStore.initWithProject(projectId)})
 
 </script>
 
