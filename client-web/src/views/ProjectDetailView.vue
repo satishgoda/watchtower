@@ -52,7 +52,7 @@
 <script setup lang="ts">
 import {onMounted, onBeforeUnmount, computed, reactive, watch} from 'vue';
 import { useRoute } from 'vue-router';
-import {DataProjectStore, useProjectStore} from '@/stores/project';
+import { useProjectStore } from '@/stores/project';
 import { RuntimeState } from '@/stores/runtimeState';
 import ThumbnailArea from '@/components/ThumbnailArea.vue';
 import VideoPlayer from '@/components/VideoPlayer.vue';
