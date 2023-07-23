@@ -32,8 +32,22 @@ const props = defineProps<{
   projectStore: DataProjectStore
   videoPlayerOptions?: any
 }>()
+function setCurrentFrame() {
+  if (!data.player) {return}
+  const currentFrame = data.player.currentTime() * props.projectStore.fps + props.projectStore.frameOffset;
+  emit('setCurrentFrame', Math.round(currentFrame))
+}
 
+function setCurrentFrameAndRequestAnimationFrame() {
+  if (!data.player) {return}
+  setCurrentFrame();
+  data.animationFrameQueue = data.player.requestAnimationFrame(setCurrentFrameAndRequestAnimationFrame);
+}
 
+function cancelSetCurrentFrame() {
+  if (!data.player) {return}
+  data.player.cancelAnimationFrame(data.animationFrameQueue);
+}
 
 // Watchers
 watch(
@@ -83,23 +97,6 @@ watch(
     }
   }
 )
-
-function setCurrentFrame() {
-  if (!data.player) {return}
-  const currentFrame = data.player.currentTime() * props.projectStore.fps + props.projectStore.frameOffset;
-  emit('setCurrentFrame', Math.round(currentFrame))
-}
-
-function setCurrentFrameAndRequestAnimationFrame() {
-  if (!data.player) {return}
-  setCurrentFrame();
-  data.animationFrameQueue = data.player.requestAnimationFrame(setCurrentFrameAndRequestAnimationFrame);
-}
-
-function cancelSetCurrentFrame() {
-  if (!data.player) {return}
-  data.player.cancelAnimationFrame(data.animationFrameQueue);
-}
 
 onBeforeUnmount(() => {
   if (data.player) {
