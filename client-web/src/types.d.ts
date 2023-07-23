@@ -69,7 +69,7 @@ type ShotCasting = {
   asset_ids: Array<string>;
 }
 
-type VideoSource = {
+type VideoPlayerSource = {
   src: string;
   type: string;
 }

@@ -15,6 +15,11 @@ import {DataProjectStore} from '@/stores/project';
 
 const videoPlayer = ref(null)
 
+const props = defineProps<{
+  runtimeState: RuntimeState
+  projectStore: DataProjectStore
+}>()
+
 const emit = defineEmits<{
   (event: 'setCurrentFrame', frameNumber: number): void
   (event: 'setIsPlaying', isPlaying: boolean): void
@@ -27,11 +32,6 @@ class Data {
 
 const data = reactive(new Data());
 
-const props = defineProps<{
-  runtimeState: RuntimeState
-  projectStore: DataProjectStore
-  videoPlayerOptions?: any
-}>()
 function setCurrentFrame() {
   if (!data.player) {return}
   const currentFrame = data.player.currentTime() * props.projectStore.fps + props.projectStore.frameOffset;
@@ -77,14 +77,22 @@ watch(
 )
 
 watch(
-  () => props.projectStore.videoPlayerOptions.sources,
+  () => props.projectStore.videoPlayerSources,
   () => {
     if (data.player) {
       // data.player.dispose()
-      data.player.options_.sources = props.projectStore.videoPlayerOptions.sources;
+      data.player.src(props.projectStore.videoPlayerSources);
+
     } else {
       if (!videoPlayer.value) {return}
-      data.player = videojs(videoPlayer.value, props.projectStore.videoPlayerOptions, function onPlayerReady() {
+      // Initialize video Player
+      const videoPlayerOptions = {
+        autoplay: false,
+        controls: true,
+        preload: 'auto',
+        sources: props.projectStore.videoPlayerSources
+      }
+      data.player = videojs(videoPlayer.value, videoPlayerOptions, function onPlayerReady() {
         console.log('Player is ready');
       })
       data.player.on('play', setCurrentFrameAndRequestAnimationFrame);

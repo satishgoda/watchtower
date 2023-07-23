@@ -21,12 +21,7 @@ export class DataProjectStore {
   totalFrames = 1;
   frameOffset = 0;
   fps = 24;
-  videoPlayerOptions = {
-    autoplay: false,
-    controls: true,
-    preload: 'auto',
-    sources: new Array<VideoSource>
-  };
+  videoPlayerSources: VideoPlayerSource[] = [];
 }
 
 
@@ -170,7 +165,7 @@ export class useProjectStore {
     const response = await axios.get(urlEdit);
     this.data.totalFrames = response.data.totalFrames;
     this.data.frameOffset = response.data.frameOffset;
-    this.data.videoPlayerOptions.sources = [
+    this.data.videoPlayerSources = [
       {
         src: `${basePath}${response.data.sourceName}`,
         type: response.data.sourceType,
