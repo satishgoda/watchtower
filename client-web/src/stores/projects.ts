@@ -8,11 +8,12 @@ Used in TheNavbar component and in ProjectListView.
  */
 export class useProjectsStore {
   data = reactive({
-    projects: [],
+    projects: new Array<ProjectListItem>(),
     activeProjectId: '',
   });
   async fetchAndInitContext() {
     try {
+      // Populate projects state
       const response = await axios.get(dataUrls.getUrl(dataUrls.urlType.Context));
       this.data.projects = response.data.projects;
     } catch (error) {

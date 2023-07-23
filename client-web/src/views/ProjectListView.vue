@@ -11,8 +11,8 @@
 </template>
 
 <script setup lang="ts">
-  const props = defineProps<{
-    projects: []
+  defineProps<{
+    projects: ProjectListItem[]
   }>()
 </script>
 

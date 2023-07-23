@@ -73,3 +73,9 @@ type VideoPlayerSource = {
   src: string;
   type: string;
 }
+
+type ProjectListItem = {
+  name: string;
+  id: string;
+  thumbnailUrl: string;
+}

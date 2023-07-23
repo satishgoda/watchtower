@@ -28,7 +28,7 @@ import {ref, watch} from 'vue';
 const router = useRouter();
 const currentProjectSelected = ref();
 const props = defineProps<{
-  projects: [],
+  projects: ProjectListItem[],
   activeProjectId: '',
 }>()
 
