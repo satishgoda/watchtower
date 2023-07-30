@@ -740,7 +740,6 @@ function onMouseEvent(event: MouseEvent) {
         && thumb.pos[1] <= mouse.y && mouse.y <= thumb.pos[1] + thumbSize[1]) {
         hitThumb = true;
         if (data.mode === 'shots') {
-          console.log(thumb.obj.startFrame);
           emit('setCurrentFrame', thumb.obj.startFrame);
         } else {
           emit('setSelectedAssets', [thumb.obj]);
