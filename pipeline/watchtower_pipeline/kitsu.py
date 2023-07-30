@@ -20,6 +20,7 @@ logging.basicConfig(
 @dataclass
 class Config:
     """Configuration setup for Kitsu client."""
+
     dotenv: Optional[str] = ''
     base_url: Optional[str] = ''
     email: Optional[str] = ''
@@ -90,6 +91,7 @@ class KitsuClient:
 @dataclass
 class KitsuContextWriter:
     """Writer for the context.json file."""
+
     kitsu_client: KitsuClient
 
     def fetch_user_context(self):
@@ -98,73 +100,117 @@ class KitsuContextWriter:
     def setup(self) -> writers.ContextWriter:
         user_context = self.fetch_user_context()
 
-        # Users
-        users_list = []
-        for p in user_context['persons']:
-            user = models.User(
-                id=p['id'],
-                name=p['full_name'],
-                has_avatar=p['has_avatar'],
-            )
-            if user.has_avatar:
-                user.thumbnailUrl = (
-                    f"{self.kitsu_client.base_url}/pictures/thumbnails/persons/{p['id']}.png"
-                )
-            users_list.append(user)
-
-        # Asset Types
-        asset_types_list = []
-        for at in user_context['asset_types']:
-            asset_type = models.AssetType(id=at['id'], name=at['name'])
-            asset_types_list.append(asset_type)
-
-        # Task Types
-        task_types_list = []
-        for tt in user_context['task_types']:
-            task_type = models.TaskType(
-                id=tt['id'],
-                name=tt['name'],
-                color=tt['color'],
-                for_shots=(tt['for_entity'] == 'Shot'),
-            )
-            task_types_list.append(task_type)
-
-        # Task Statuses
-        task_statuses_list = []
-        for ts in user_context['task_status']:
-            task_status = models.TaskStatus(id=ts['id'], name=ts['name'], color=ts['color'])
-            task_statuses_list.append(task_status)
-
         # Projects
-        projects_list = []
-        for p in user_context['projects']:
-            projects_list.append(
-                models.Project(
-                    id=p['id'],
-                    name=p['name'],
-                    ratio=p['ratio'],
-                    resolution=p['resolution'],
-                    asset_types=p['asset_types'],
-                    task_types=p['task_types'],
-                    task_statuses=p['task_statuses'],
-                    team=p['team'],
-                    thumbnailUrl=f"{self.kitsu_client.base_url}/pictures/thumbnails/projects/{p['id']}.png",
-                )
+        projects_list = [
+            models.ProjectListItem(
+                id=p['id'],
+                name=p['name'],
+                thumbnailUrl=f"{self.kitsu_client.base_url}/pictures/thumbnails/projects/{p['id']}.png",
             )
+            for p in user_context['projects']
+        ]
 
         return writers.ContextWriter(
             projects=projects_list,
-            asset_types=asset_types_list,
-            task_types=task_types_list,
-            task_status=task_statuses_list,
-            users=users_list,
         )
 
 
 @dataclass
 class KitsuProjectWriter:
     """Writer for project files."""
+
     kitsu_client: KitsuClient
+
+    def fetch_user_context(self):
+        return self.kitsu_client.get('/data/user/context').json()
+
+    # Project
+    def setup_project(self, p: models.ProjectListItem) -> models.Project:
+        ctx = self.fetch_user_context()
+        # Get the project from the contex
+        project_from_context = next(filter(lambda item: item['id'] == p.id, ctx['projects']), None)
+        # Filter asset_types for project. If the project does not explicitly specify 'asset_types'
+        # we use the ones from the context
+        if 'asset_types' not in project_from_context:
+            filtered_asset_types = ctx['asset_types']
+        else:
+            filtered_asset_types = [
+                item
+                for item in ctx['asset_types']
+                if item['id'] in project_from_context['asset_types']
+            ]
+
+        asset_types = [
+            models.AssetType(
+                name=item['name'],
+                id=item['id'],
+            )
+            for item in filtered_asset_types
+        ]
+        # Filter task_types for project. If the project does not explicitly specify 'task_types'
+        # we use the ones from the context
+        if 'task_types' not in project_from_context:
+            filtered_task_types = ctx['task_types']
+        else:
+            filtered_task_types = [
+                item
+                for item in ctx['task_types']
+                if item['id'] in project_from_context['task_types']
+            ]
+
+        task_types = [
+            models.TaskType(
+                name=item['name'],
+                id=item['id'],
+                color=item['color'],
+                for_shots=item['for_entity'] == 'Shot',
+            )
+            for item in filtered_task_types
+        ]
+        # Filter task_statuses for project. If the project does not explicitly specify 'task_statuses'
+        # we use the ones from the context
+        if 'task_statuses' not in project_from_context:
+            filtered_task_statuses = ctx['task_status']  # This is a discrepancy in the Kitsu API
+        else:
+            filtered_task_statuses = [
+                item
+                for item in ctx['task_status']
+                if item['id'] in project_from_context['task_statuses']
+            ]
+
+        task_statuses = [
+            models.TaskStatus(
+                name=item['name'],
+                id=item['id'],
+                color=item['color'],
+            )
+            for item in filtered_task_statuses
+        ]
+        # Filter users for project
+        team = [
+            models.User(
+                name=item['full_name'],
+                id=item['id'],
+                thumbnailUrl=f"{self.kitsu_client.base_url}/pictures/thumbnails/persons/{item['id']}.png",
+                has_avatar=True,
+            )
+            for item in ctx['persons']
+            if item['id'] in project_from_context['team']
+        ]
+
+        # Build the Project
+        return models.Project(
+            id=project_from_context['id'],
+            name=project_from_context['name'],
+            asset_types=asset_types,
+            task_types=task_types,
+            task_statuses=task_statuses,
+            resolution=project_from_context['resolution'],
+            ratio=project_from_context['ratio'],
+            thumbnailUrl=f"{self.kitsu_client.base_url}/pictures/thumbnails/projects/{project_from_context['id']}.png",
+            fps=project_from_context['fps'],
+            team=team,
+        )
 
     # Assets
     def get_project_assets(self, project_id):
@@ -287,10 +333,10 @@ class KitsuProjectWriter:
             break
         if not edit:
             return models.Edit(
-            project=project,
-            totalFrames=0,
-            frameOffset=0,
-        )
+                project=project,
+                totalFrames=0,
+                frameOffset=0,
+            )
 
         # Get preview-files from the first task found (usually only one)
         r_previews = self.kitsu_client.get(f"/data/edits/{edit['id']}/preview-files")
@@ -331,14 +377,15 @@ class KitsuProjectWriter:
             frameOffset=frame_offset,
         )
 
-    def setup(self, p: models.Project):
-        assets = self.get_project_assets(p.id)
-        sequences = self.get_project_sequences(p.id)
-        shots = self.get_project_shots(p)
-        casting = self.get_project_casting(p, sequences, shots, assets)
-        edit = self.get_project_edit(p)
+    def setup(self, project_from_context):
+        project = self.setup_project(project_from_context)
+        assets = self.get_project_assets(project.id)
+        sequences = self.get_project_sequences(project.id)
+        shots = self.get_project_shots(project)
+        casting = self.get_project_casting(project, sequences, shots, assets)
+        edit = self.get_project_edit(project)
         return writers.ProjectWriter(
-            project=p,
+            project=project,
             assets=assets,
             shots=shots,
             sequences=sequences,
@@ -348,17 +395,17 @@ class KitsuProjectWriter:
 
 
 def fetch_and_save(dotenv='.env.local') -> pathlib.Path:
-    """Setup a Kitsu client, fetch all context and projects data, download assets."""
+    """Set up a Kitsu client, fetch all context and projects data, download assets."""
     config = Config(dotenv=dotenv)
 
     kitsu_client = KitsuClient(config=config)
     context_writer = KitsuContextWriter(kitsu_client=kitsu_client).setup()
     context_writer.download_previews(kitsu_client.headers)
     context_writer.write_as_json()
-    for p in context_writer.projects:
-        project_writer = KitsuProjectWriter(kitsu_client=kitsu_client).setup(p)
-        project_writer.download_previews(kitsu_client.headers)
-        project_writer.write_as_json()
+    # for p in context_writer.projects:
+    #     project_writer = KitsuProjectWriter(kitsu_client=kitsu_client).setup(p)
+    #     project_writer.download_previews(kitsu_client.headers)
+    #     project_writer.write_as_json()
 
     static_path_dst = pathlib.Path().cwd().absolute() / 'public/static'
     logging.info(f"Data downloaded in {static_path_dst}")

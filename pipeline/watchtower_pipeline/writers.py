@@ -12,24 +12,14 @@ from watchtower_pipeline import models
 @dataclass
 class ContextWriter:
 
-    projects: List[models.Project]
-    asset_types: List[models.AssetType]
-    task_types: List[models.TaskType]
-    task_status: List[models.TaskStatus]
-    users: List[models.User] = field(default_factory=list)
+    projects: List[models.ProjectListItem]
 
     def to_dict(self):
         return {
-            'asset_types': [asdict(a) for a in self.asset_types],
-            'users': [p.to_dict() for p in self.users],
             'projects': [asdict(p) for p in self.projects],
-            'task_status': [asdict(t) for t in self.task_status],
-            'task_types': [asdict(t) for t in self.task_types],
         }
 
     def download_previews(self, requests_headers: Optional[Dict] = None, force=False):
-        for user in tqdm(self.users, desc="Downloading User thumbnails"):
-            user.download_and_assign_thumbnail(requests_headers=requests_headers, force=force)
         for p in tqdm(self.projects, desc="Downloading Project thumbnails"):
             p.download_and_assign_thumbnail(requests_headers=requests_headers, force=force)
 
@@ -65,6 +55,8 @@ class ProjectWriter:
             s.download_and_assign_thumbnail(requests_headers=requests_headers, force=force)
         for a in tqdm(self.assets, desc="Downloading Asset thumbnails"):
             a.download_and_assign_thumbnail(requests_headers=requests_headers, force=force)
+        for user in tqdm(self.project.team, desc="Downloading User thumbnails"):
+            user.download_and_assign_thumbnail(requests_headers=requests_headers, force=force)
 
     def write_as_json(self):
         self.dump_data('project', asdict(self.project))

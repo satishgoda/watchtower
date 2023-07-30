@@ -137,13 +137,21 @@ class Project(StaticPreviewMixin, IdMixin):
 
     ratio: str
     resolution: str
-    asset_types: List[str] = field(default_factory=list)
-    task_types: List[str] = field(default_factory=list)
-    task_statuses: List[str] = field(default_factory=list)
-    team: List[str] = field(default_factory=list)
+    asset_types: List[AssetType] = field(default_factory=list)
+    task_types: List[TaskType] = field(default_factory=list)
+    task_statuses: List[TaskStatus] = field(default_factory=list)
+    team: List[User] = field(default_factory=list)
     id: Optional[str] = None
     thumbnailUrl: Optional[str] = None
     fps: float = 24
+
+
+@dataclass
+class ProjectListItem(StaticPreviewMixin, IdMixin):
+    """Used to build the dataset managed via projects.ts"""
+
+    id: Optional[str] = None
+    thumbnailUrl: Optional[str] = None
 
 
 @dataclass
