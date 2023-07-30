@@ -17,6 +17,16 @@
         option(v-for='option in taskTypesForMode' :key='option.id' :value='option.id')
           | {{ option.name }}
     .toolbar-item
+      label(for='displayMode') Group by
+      select(v-model='data.displayMode')
+        option(v-if="data.mode === 'shots'" value='chronological') Chronological (ungrouped)
+        option(v-if="data.mode === 'assets'" value='chronological') Ungrouped
+        option(v-if="data.mode === 'shots'" value='groupBySequence') Sequence
+        option(v-if="data.mode === 'assets'" value='groupByAssetType') Asset Type
+        option(v-if="data.taskTypeFilter !== ''" value='groupByTaskStatus') Task Status
+        option(v-if="data.taskTypeFilter !== ''" value='groupByAssignee') Assignee
+  .toolbar
+    .toolbar-item
       span(v-if="data.taskTypeFilter !== ''")
         input#showAssignees(type='checkbox' v-model='data.showAssignees')
         label(for='showAssignees') Assignees
@@ -29,15 +39,6 @@
           option(value='dots') Dots
           option(value='stripes') Stripes
           option(value='rects') Heatmap
-    .toolbar-item
-      label(for='displayMode') Group by
-      select(v-model='data.displayMode')
-        option(v-if="data.mode === 'shots'" value='chronological') Chronological (ungrouped)
-        option(v-if="data.mode === 'assets'" value='chronological') Ungrouped
-        option(v-if="data.mode === 'shots'" value='groupBySequence') Sequence
-        option(v-if="data.mode === 'assets'" value='groupByAssetType') Asset Type
-        option(v-if="data.taskTypeFilter !== ''" value='groupByTaskStatus') Task Status
-        option(v-if="data.taskTypeFilter !== ''" value='groupByAssignee') Assignee
   canvas(
     id="canvas-thumb-grid"
     ref="canvasThumbGrid")
