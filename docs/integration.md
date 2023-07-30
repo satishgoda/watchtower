@@ -21,7 +21,7 @@ projects/
 └── context.json
 ```
 
-This is achieved by setting up a couple of classes (ContextWriter and ProjectWriter), that
+This is achieved by setting up a couple of classes (ProjectListWriter and ProjectWriter), that
 will write out the JSON files property formatted for Watchtower.
 
 Here is quick list of steps needed to build a custom connector:
@@ -29,7 +29,7 @@ Here is quick list of steps needed to build a custom connector:
 - Create a Python virtual environment
 - `pip install watchtower_pipeline`
 - Define a client that can connect/authenticate to the production tracker
-- Define a `ContextWriter` which will require 
+- Define a `ProjectListWriter` which will require 
   `Users`, `Asset Types`, `Task Types`, `Task Statuses` and `Projects`
 - Define a `ProjectWriter`, which will require
   `Tasks`, `Assets`, `Sequences`, `Shots`, `Casting` and `Edit`
@@ -52,7 +52,7 @@ class FoobarClient:
   pass
 
 @dataclass
-class FoobarContextWriter:
+class FoobarProjectListWriter:
   """Used to write context.json
   
   This Data Class takes care of fetching and aggregating all the generic
@@ -63,7 +63,7 @@ class FoobarContextWriter:
   def fetch_user_context(self):
     return self.foobar_client.get('/path/to/context/data').json()
 
-  def setup(self) -> writers.ContextWriter:
+  def setup(self) -> writers.ProjectListWriter:
     user_context = self.fetch_user_context()
     # Iterate through the fetched document and setup
     # - projects_list
@@ -72,8 +72,8 @@ class FoobarContextWriter:
     # - task_statuses_list
     # - users_list
 
-    # Pass the datacasses to the ContextWriter
-    return writers.ContextWriter(
+    # Pass the datacasses to the ProjectListWriter
+    return writers.ProjectListWriter(
           projects=projects_list,
           asset_types=asset_types_list,
           task_types=task_types_list,
@@ -121,7 +121,7 @@ class FoobarProjectWriter:
 
   def fetch_and_save():
     foobar_client = FoobarClient()
-    context_writer = FoobarContextWriter(foobar_client=foobar_client).setup()
+    context_writer = FoobarProjectListWriter(foobar_client=foobar_client).setup()
     context_writer.write_as_json()
     for p in context_writer.projects:
       project_writer = FoobarProjectWriter(foobar_client=foobar_client).setup(p)
@@ -345,7 +345,7 @@ sq = models.Sequence(
 
 The JSON files needed by Watchtower are created through the following writers.
 
-### ContextWriter
+### ProjectListWriter
 
 | Attribute   | Type                                | Default |
 |-------------|-------------------------------------|---------|
@@ -355,7 +355,7 @@ The JSON files needed by Watchtower are created through the following writers.
 | task_status | `List[models.TaskStatus]`           | -       |
 | users       | `List[models.User]`                 | []      |
 
-Once created, we need to call `ContextWriter.write_as_json()` to write out the data.
+Once created, we need to call `ProjectListWriter.write_as_json()` to write out the data.
 This will write out the correctly formatted `context.json` file.
 
 ### ProjectWriter
@@ -369,5 +369,5 @@ This will write out the correctly formatted `context.json` file.
 | edit      | `models.Edit`              | -       |
 | casting   | `List[models.ShotCasting]` | -       |
 
-Once created, we need to call `ContextWriter.write_as_json()` to write out the data.
+Once created, we need to call `ProjectListWriter.write_as_json()` to write out the data.
 This will write out the correctly formatted `context.json` file.

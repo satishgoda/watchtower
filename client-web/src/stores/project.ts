@@ -30,14 +30,6 @@ export class useProjectStore {
 
   async fetchProjectData(projectId: string) {
     try {
-      const context = await axios.get(dataUrls.getUrl(dataUrls.urlType.Context));
-      colors.batchAssignColor(context.data.asset_types);
-      this.data.assetTypes = context.data.asset_types;
-      colors.batchConvertColorHexToRGB(context.data.task_types);
-      this.data.taskTypes = context.data.task_types;
-      colors.batchConvertColorHexToRGB(context.data.task_status);
-      this.data.taskStatuses = context.data.task_status;
-      // this.data.team = context.data.users;
 
       const response = await axios.get(dataUrls.getUrl(dataUrls.urlType.Project, projectId));
       this.data.id = response.data.id;
@@ -47,22 +39,12 @@ export class useProjectStore {
       this.data.thumbnailUrl = response.data.thumbnailUrl;
       this.data.fps = response.data.fps;
 
-      // If specific tasks are defined for this project, filter the context
-      if (response.data.task_types.length > 0) {
-        this.data.taskTypes = this.data.taskTypes.filter(function(t) {
-          return response.data.task_types.includes(t.id);
-        });
-      }
-      if (response.data.task_statuses.length > 0) {
-        this.data.taskStatuses = this.data.taskStatuses.filter(function(t) {
-          return response.data.task_statuses.includes(t.id);
-        });
-      }
-      if (response.data.asset_types.length > 0) {
-        this.data.assetTypes = this.data.assetTypes.filter(function(a) {
-          return response.data.asset_types.includes(a.id);
-        });
-      }
+      colors.batchAssignColor(response.data.asset_types);
+      this.data.assetTypes = response.data.asset_types;
+      colors.batchConvertColorHexToRGB(response.data.task_types);
+      this.data.taskTypes = response.data.task_types;
+      colors.batchConvertColorHexToRGB(response.data.task_statuses);
+      this.data.taskStatuses = response.data.task_statuses;
 
       // Reference all users from the context
       const projectTeam = response.data.team;
@@ -70,9 +52,7 @@ export class useProjectStore {
       if (projectTeam.length > 0) {
         const processedUsers = [];
         for (let i = 0; i < projectTeam.length; i++) {
-          // Lookup the project user in the context, by ID
-          const filteredUser = context.data.users.find((u: User) => u.id === projectTeam[i]);
-          if (!filteredUser) {continue}
+          const filteredUser = projectTeam[i];
           // Build a processed user
           // TODO: Use the existing User type, not ProcessedUser
           const user: ProcessedUser = {

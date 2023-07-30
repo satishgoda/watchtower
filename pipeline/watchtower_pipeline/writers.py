@@ -10,7 +10,7 @@ from watchtower_pipeline import models
 
 
 @dataclass
-class ContextWriter:
+class ProjectListWriter:
 
     projects: List[models.ProjectListItem]
 
@@ -21,10 +21,13 @@ class ContextWriter:
 
     def download_previews(self, requests_headers: Optional[Dict] = None, force=False):
         for p in tqdm(self.projects, desc="Downloading Project thumbnails"):
-            p.download_and_assign_thumbnail(requests_headers=requests_headers, force=force)
+            path = pathlib.Path('projects-list') / 'previews'
+            p.download_and_assign_thumbnail(
+                path=path, requests_headers=requests_headers, force=force
+            )
 
     def write_as_json(self):
-        dst = models.BASE_PATH / 'public/data/projects/context.json'
+        dst = models.BASE_PATH / 'public/data/projects-list/index.json'
         dst.parent.mkdir(parents=True, exist_ok=True)
         with open(dst, 'w') as outfile:
             json.dump(self.to_dict(), outfile, indent=2)
@@ -49,14 +52,19 @@ class ProjectWriter:
         logging.debug(f"Saved {name} data for project {self.project.id}")
 
     def download_previews(self, requests_headers: Optional[Dict] = None, force=False):
-        # Get the project square thumbnail
-        self.project.download_and_assign_thumbnail(requests_headers=requests_headers, force=force)
+        path = pathlib.Path('projects') / self.project.id / 'previews'
         for s in tqdm(self.shots, desc="Downloading Shot thumbnails"):
-            s.download_and_assign_thumbnail(requests_headers=requests_headers, force=force)
+            s.download_and_assign_thumbnail(
+                path=path, requests_headers=requests_headers, force=force
+            )
         for a in tqdm(self.assets, desc="Downloading Asset thumbnails"):
-            a.download_and_assign_thumbnail(requests_headers=requests_headers, force=force)
+            a.download_and_assign_thumbnail(
+                path=path, requests_headers=requests_headers, force=force
+            )
         for user in tqdm(self.project.team, desc="Downloading User thumbnails"):
-            user.download_and_assign_thumbnail(requests_headers=requests_headers, force=force)
+            user.download_and_assign_thumbnail(
+                path=path, requests_headers=requests_headers, force=force
+            )
 
     def write_as_json(self):
         self.dump_data('project', asdict(self.project))

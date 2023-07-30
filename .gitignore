@@ -28,11 +28,11 @@ pnpm-debug.log*
 *.paw
 /public/*.mkv
 /public/*.mp4
-/public/data/previews/*/*.png
-/public/data/projects/*
+/public/data/projects-list
+/public/data/projects
 /public/context.json
 /pipeline/dist/
 /pipeline/dist_watchtower/
 /watchtower/
-/client-web/public/data/previews
+/client-web/public/data/projects-list
 /client-web/public/data/projects

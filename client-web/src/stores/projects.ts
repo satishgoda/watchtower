@@ -14,7 +14,7 @@ export class useProjectsStore {
   async fetchAndInitContext() {
     try {
       // Populate projects state
-      const response = await axios.get(dataUrls.getUrl(dataUrls.urlType.Context));
+      const response = await axios.get(dataUrls.getUrl(dataUrls.urlType.ProjectList));
       this.data.projects = response.data.projects;
     } catch (error) {
       console.log(error)

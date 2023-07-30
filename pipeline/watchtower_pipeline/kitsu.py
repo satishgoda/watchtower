@@ -89,7 +89,7 @@ class KitsuClient:
 
 
 @dataclass
-class KitsuContextWriter:
+class KitsuProjectListWriter:
     """Writer for the context.json file."""
 
     kitsu_client: KitsuClient
@@ -97,7 +97,7 @@ class KitsuContextWriter:
     def fetch_user_context(self):
         return self.kitsu_client.get('/data/user/context').json()
 
-    def setup(self) -> writers.ContextWriter:
+    def setup(self) -> writers.ProjectListWriter:
         user_context = self.fetch_user_context()
 
         # Projects
@@ -110,7 +110,7 @@ class KitsuContextWriter:
             for p in user_context['projects']
         ]
 
-        return writers.ContextWriter(
+        return writers.ProjectListWriter(
             projects=projects_list,
         )
 
@@ -399,13 +399,13 @@ def fetch_and_save(dotenv='.env.local') -> pathlib.Path:
     config = Config(dotenv=dotenv)
 
     kitsu_client = KitsuClient(config=config)
-    context_writer = KitsuContextWriter(kitsu_client=kitsu_client).setup()
+    context_writer = KitsuProjectListWriter(kitsu_client=kitsu_client).setup()
     context_writer.download_previews(kitsu_client.headers)
     context_writer.write_as_json()
-    # for p in context_writer.projects:
-    #     project_writer = KitsuProjectWriter(kitsu_client=kitsu_client).setup(p)
-    #     project_writer.download_previews(kitsu_client.headers)
-    #     project_writer.write_as_json()
+    for p in context_writer.projects:
+        project_writer = KitsuProjectWriter(kitsu_client=kitsu_client).setup(p)
+        project_writer.download_previews(kitsu_client.headers)
+        project_writer.write_as_json()
 
     static_path_dst = pathlib.Path().cwd().absolute() / 'public/static'
     logging.info(f"Data downloaded in {static_path_dst}")

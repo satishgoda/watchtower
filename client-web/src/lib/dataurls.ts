@@ -1,5 +1,5 @@
 enum UrlTypes {
-  Context,
+  ProjectList,
   Project,
   Sequences,
   Shots,
@@ -17,9 +17,9 @@ export default {
     const basePath = import.meta.env.BASE_URL;
 
     switch(urlType) {
-      case UrlTypes.Context:
+      case UrlTypes.ProjectList:
         return (this.isStatic ?
-          `${basePath}data/projects/context.json` :
+          `${basePath}data/projects-list/index.json` :
           '/api/data/user/context');
 
       case UrlTypes.Project:

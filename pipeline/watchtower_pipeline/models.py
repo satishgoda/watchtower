@@ -27,7 +27,7 @@ class StaticPreviewMixin:
         return hashlib.md5(name.encode()).hexdigest()
 
     @staticmethod
-    def generate_preview_file_path(file_id: str) -> pathlib.Path:
+    def generate_preview_file_path(file_id: str, path: pathlib.Path) -> pathlib.Path:
         """Generate a normalized file path.
         This forces .png extension, which for now is ok since all image
         file use that extension, and we do not need to deal with videos.
@@ -38,7 +38,7 @@ class StaticPreviewMixin:
         - 0a/30a32d425-6723-4f2b-baf7-2a6d457fa669.png
         """
         filename = f'{file_id}.png'
-        return pathlib.Path('data/previews') / file_id[:2] / filename
+        return pathlib.Path('data') / path / file_id[:2] / filename
 
     @staticmethod
     def fetch_and_save_media(src_url, headers, dst: pathlib.Path, force=False):
@@ -49,6 +49,7 @@ class StaticPreviewMixin:
 
     def download_and_assign_thumbnail(
         self,
+        path: Optional[pathlib.Path] = None,
         requests_headers: Optional[Dict] = None,
         force=False,
     ):
@@ -66,7 +67,9 @@ class StaticPreviewMixin:
         if not all([result.scheme, result.netloc]):
             logging.debug("Skipping local url. This file was already processed.")
             return
-        dst_url = self.generate_preview_file_path(self.hash_filename(src_url))
+        if not path:
+            path = pathlib.Path('')
+        dst_url = self.generate_preview_file_path(self.hash_filename(src_url), path)
         dst = BASE_PATH / 'public' / dst_url
         self.fetch_and_save_media(src_url, requests_headers, dst, force=force)
         setattr(self, 'thumbnailUrl', str(dst_url))

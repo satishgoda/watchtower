@@ -75,7 +75,7 @@ def generate_example_project_data() -> pathlib.Path:
         thumbnailUrl=f"https://picsum.photos/id/{10}/192/108",
     )
 
-    context_writer = writers.ContextWriter(
+    context_writer = writers.ProjectListWriter(
         projects=[project],
         asset_types=asset_types_list,
         task_types=task_types_list,
