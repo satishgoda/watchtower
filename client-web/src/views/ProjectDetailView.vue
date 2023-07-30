@@ -28,14 +28,14 @@
           :project-store="projectStore.data"
           )
 
-      section.inspector-details(v-if="projectStore.currentShot")
+      section.inspector-details(v-if="runtimeState.currentShot")
         h5.section-headline SHOT
-        h3.section-title {{ projectStore.currentShot.name }}
+        h3.section-title {{ runtimeState.currentShot.name }}
         ul
-          li Duration: {{ projectStore.currentShot.durationSeconds.toFixed(2) }} sec
-          li Start Frame: {{ projectStore.currentShot.startFrame }}
-          li Assets: {{ projectStore.currentShot.asset_ids.length }}
-          li Tasks: {{ projectStore.currentShot.tasks.length }}
+          li Duration: {{ runtimeState.currentShot.durationSeconds.toFixed(2) }} sec
+          li Start Frame: {{ runtimeState.currentShot.startFrame }}
+          li Assets: {{ runtimeState.currentShot.asset_ids.length }}
+          li Tasks: {{ runtimeState.currentShot.tasks.length }}
   .row-timeline
     .col-12
 
