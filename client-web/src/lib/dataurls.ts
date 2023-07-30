@@ -8,46 +8,30 @@ enum UrlTypes {
 }
 
 export default {
-  isStatic: import.meta.env.VITE_DATA_IS_STATIC,
 
   urlType: UrlTypes,
   getUrl: function(urlType: UrlTypes, projectId?: string) {
 
-    const projectQueryParams = new URLSearchParams({project_id: projectId || ''}).toString();
     const basePath = import.meta.env.BASE_URL;
 
     switch(urlType) {
       case UrlTypes.ProjectList:
-        return (this.isStatic ?
-          `${basePath}data/projects-list/index.json` :
-          '/api/data/user/context');
+        return `${basePath}data/projects-list/index.json`;
 
       case UrlTypes.Project:
-        return (this.isStatic ?
-          `${basePath}data/projects/${projectId}/project.json` :
-          `/api/data/projects/${projectId}`);
+        return `${basePath}data/projects/${projectId}/project.json`;
 
       case UrlTypes.Sequences:
-        return this.isStatic ?
-           `${basePath}data/projects/${projectId}/sequences.json` :
-           `/api/data/sequences?${projectQueryParams}`
+        return `${basePath}data/projects/${projectId}/sequences.json`;
 
       case UrlTypes.Shots:
-        return this.isStatic ?
-           `${basePath}data/projects/${projectId}/shots.json` :
-           `/api/data/shots/with-tasks?${projectQueryParams}`
+        return `${basePath}data/projects/${projectId}/shots.json`;
 
       case UrlTypes.Assets:
-        return this.isStatic ?
-           `${basePath}data/projects/${projectId}/assets.json` :
-           `/api/data/assets/with-tasks?${projectQueryParams}`
+        return `${basePath}data/projects/${projectId}/assets.json`;
 
       case UrlTypes.Casting:
-        return this.isStatic ?
-           `${basePath}data/projects/${projectId}/casting.json` :
-           ``
-            // TODO: Implement a new API in zou to fetch casting
-            // independently from sequences.
+        return `${basePath}data/projects/${projectId}/casting.json`;
     }
   }
 }

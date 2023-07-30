@@ -97,19 +97,12 @@ export class useProjectStore {
     try {
       const response = await axios.get(dataUrls.getUrl(dataUrls.urlType.Shots, projectId));
       for (const shot of response.data) {
-        if (dataUrls.isStatic) {
-          if (shot.thumbnailUrl === null) {
-            shot.thumbnailUrl = `${basePath}static/img/placeholder-asset.png`
-          } else {
-            // Prepend the base_url
-            const basePath = import.meta.env.BASE_URL;
-            shot.thumbnailUrl = `${basePath}${shot.thumbnailUrl}`
-          }
+        if (shot.thumbnailUrl === null) {
+          shot.thumbnailUrl = `${basePath}static/img/placeholder-asset.png`
         } else {
-          // If the shot comes from Kitsu, we need to add some properties.
-          shot.thumbnailUrl = `/api/pictures/thumbnails/preview-files/${shot.preview_file_id}.png`;
-          shot.startFrame = shot.data.frame_in;
-          shot.durationSeconds = (shot.data.frame_out - shot.data.frame_in) / this.data.fps;
+          // Prepend the base_url
+          const basePath = import.meta.env.BASE_URL;
+          shot.thumbnailUrl = `${basePath}${shot.thumbnailUrl}`
         }
         shot.asset_ids = [];
       }
@@ -158,17 +151,12 @@ export class useProjectStore {
     try {
       const response = await axios.get(dataUrls.getUrl(dataUrls.urlType.Assets, projectId));
       for (const asset of response.data) {
-        if (dataUrls.isStatic) {
-          if (asset.thumbnailUrl === null) {
-            asset.thumbnailUrl = `${basePath}static/img/placeholder-asset.png`
-          } else {
-            // Prepend the base_url
-            const basePath = import.meta.env.BASE_URL;
-            asset.thumbnailUrl = `${basePath}${asset.thumbnailUrl}`
-          }
+        if (asset.thumbnailUrl === null) {
+          asset.thumbnailUrl = `${basePath}static/img/placeholder-asset.png`
         } else {
-          // If the shot comes from Kitsu, we need to add the thumbnailUrl property.
-          asset.thumbnailUrl = `/api/pictures/thumbnails/preview-files/${asset.preview_file_id}.png`;
+          // Prepend the base_url
+          const basePath = import.meta.env.BASE_URL;
+          asset.thumbnailUrl = `${basePath}${asset.thumbnailUrl}`
         }
         // This will be populated via fetchSequenceCasting()
         asset.shot_ids = [];
