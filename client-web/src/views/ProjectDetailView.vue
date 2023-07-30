@@ -4,6 +4,7 @@
     .section-thumbnailview
       ThumbnailArea(
         @set-current-frame="setCurrentFrame"
+        @set-selected-assets="setSelectedAssets"
         :runtime-state="runtimeState"
         :project-store="projectStore.data"
         )
@@ -103,6 +104,10 @@ function setCurrentFrame(frameNumber: string|number) {
     }
   }
   runtimeState.currentSequence = currSequence;
+}
+
+function setSelectedAssets(assets: [Asset]) {
+  runtimeState.selectedAssets = assets;
 }
 
 function setIsPlaying(isPlaying: boolean) {
