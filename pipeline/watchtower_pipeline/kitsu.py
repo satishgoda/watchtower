@@ -21,7 +21,7 @@ logging.basicConfig(
 class Config:
     """Configuration setup for Kitsu client."""
 
-    dotenv: Optional[str] = ''
+    dotenv: Optional[str] = '.env.local'
     base_url: Optional[str] = ''
     email: Optional[str] = ''
     password: Optional[str] = ''
@@ -56,7 +56,7 @@ class Config:
 class KitsuClient:
     """Client to query the Kitsu API."""
 
-    config: Config
+    config: Config = None
     jwt: str = None
 
     @property
@@ -85,6 +85,8 @@ class KitsuClient:
         return r_jwt['access_token']
 
     def __post_init__(self):
+        if not self.config:
+            self.config = Config()
         self.jwt = self.fetch_jwt(self.config.email, self.config.password)
 
 
@@ -125,10 +127,12 @@ class KitsuProjectWriter:
         return self.kitsu_client.get('/data/user/context').json()
 
     # Project
-    def setup_project(self, p: models.ProjectListItem) -> models.Project:
+    def setup_project(self, project_id) -> models.Project:
         ctx = self.fetch_user_context()
         # Get the project from the contex
-        project_from_context = next(filter(lambda item: item['id'] == p.id, ctx['projects']), None)
+        project_from_context = next(
+            filter(lambda item: item['id'] == project_id, ctx['projects']), None
+        )
         # Filter asset_types for project. If the project does not explicitly specify 'asset_types'
         # we use the ones from the context
         if 'asset_types' not in project_from_context:
@@ -377,8 +381,8 @@ class KitsuProjectWriter:
             frameOffset=frame_offset,
         )
 
-    def setup(self, project_from_context):
-        project = self.setup_project(project_from_context)
+    def setup(self, project_id):
+        project = self.setup_project(project_id)
         assets = self.get_project_assets(project.id)
         sequences = self.get_project_sequences(project.id)
         shots = self.get_project_shots(project)
@@ -394,18 +398,26 @@ class KitsuProjectWriter:
         )
 
 
-def fetch_and_save(dotenv='.env.local') -> pathlib.Path:
-    """Set up a Kitsu client, fetch all context and projects data, download assets."""
-    config = Config(dotenv=dotenv)
+def fetch_and_save_projects_list() -> list:
+    kitsu_client = KitsuClient()
+    projects_list_writer = KitsuProjectListWriter(kitsu_client=kitsu_client).setup()
+    projects_list_writer.download_previews(kitsu_client.headers)
+    projects_list_writer.write_as_json()
+    return projects_list_writer.projects
 
-    kitsu_client = KitsuClient(config=config)
-    context_writer = KitsuProjectListWriter(kitsu_client=kitsu_client).setup()
-    context_writer.download_previews(kitsu_client.headers)
-    context_writer.write_as_json()
-    for p in context_writer.projects:
-        project_writer = KitsuProjectWriter(kitsu_client=kitsu_client).setup(p)
-        project_writer.download_previews(kitsu_client.headers)
-        project_writer.write_as_json()
+
+def fetch_and_save_project(project_id):
+    kitsu_client = KitsuClient()
+    project_writer = KitsuProjectWriter(kitsu_client=kitsu_client).setup(project_id)
+    project_writer.download_previews(kitsu_client.headers)
+    project_writer.write_as_json()
+
+
+def fetch_and_save_all() -> pathlib.Path:
+    """Set up a Kitsu client, fetch all context and projects data, download assets."""
+
+    for p in fetch_and_save_projects_list():
+        fetch_and_save_project(p.id)
 
     static_path_dst = pathlib.Path().cwd().absolute() / 'public/static'
     logging.info(f"Data downloaded in {static_path_dst}")
@@ -415,12 +427,25 @@ def fetch_and_save(dotenv='.env.local') -> pathlib.Path:
 def main(args):
     parser = argparse.ArgumentParser(description="Generate Watchtower content.")
     parser.add_argument("-b", "--bundle", action=argparse.BooleanOptionalAction)
+    parser.add_argument(
+        "-p",
+        "--projects",
+        nargs="*",
+        type=str,
+        default=[],
+        help="Optional list of projects",
+    )
+
     args = parser.parse_args(args)
 
-    static_path = fetch_and_save()
-    if args.bundle:
-        writers.WatchtowerBundler.bundle(static_path)
-        shutil.rmtree(static_path.parent)
+    if args.projects:
+        for a in args.projects:
+            fetch_and_save_project(a)
+    else:
+        static_path = fetch_and_save_all()
+        if args.bundle:
+            writers.WatchtowerBundler.bundle(static_path)
+            shutil.rmtree(static_path.parent)
 
 
 if __name__ == "__main__":
