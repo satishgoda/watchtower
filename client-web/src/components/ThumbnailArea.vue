@@ -52,7 +52,6 @@
 
 </template>
 
-
 <script setup lang="ts">
 import { UIRenderer, UILayout } from 'uirenderer-canvas';
 import { DataProjectStore } from '@/stores/project';
