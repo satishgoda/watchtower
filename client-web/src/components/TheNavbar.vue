@@ -24,6 +24,7 @@
 
 import { RouterLink, useRouter } from 'vue-router';
 import {ref, watch} from 'vue';
+import type { ProjectListItem } from '@/types.d.ts';
 
 const router = useRouter();
 const currentProjectSelected = ref();

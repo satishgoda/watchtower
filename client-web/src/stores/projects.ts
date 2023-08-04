@@ -1,6 +1,7 @@
 import { reactive } from 'vue';
 import axios from 'axios';
 import dataUrls from '@/lib/dataurls';
+import type { ProjectListItem } from '@/types.d.ts';
 
 /*
 Store global list of projects.

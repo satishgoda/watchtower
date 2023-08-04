@@ -1,3 +1,5 @@
+import type { Asset, Sequence, Shot } from '@/types.d.ts';
+
 export class RuntimeState {
   isPlaying = false;
   currentFrame = 0;

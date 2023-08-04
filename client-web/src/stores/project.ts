@@ -2,6 +2,7 @@ import { reactive } from 'vue';
 import axios from 'axios';
 import dataUrls from '@/lib/dataurls';
 import colors from '@/lib/colors';
+import type { Asset, AssetType, TaskType, TaskStatus, ProcessedUser, Sequence, Shot, ShotCasting, VideoPlayerSource } from '@/types.d.ts';
 
 const basePath = import.meta.env.BASE_URL;
 

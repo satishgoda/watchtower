@@ -11,6 +11,8 @@
 </template>
 
 <script setup lang="ts">
+import type { ProjectListItem } from '@/types.d.ts';
+
   defineProps<{
     projects: ProjectListItem[]
   }>()

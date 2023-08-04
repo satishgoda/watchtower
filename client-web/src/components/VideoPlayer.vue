@@ -10,8 +10,8 @@
 import videojs from 'video.js';
 import './../../node_modules/video.js/dist/video-js.css'
 import { reactive, ref, watch, onBeforeUnmount } from 'vue';
-import { RuntimeState } from '@/stores/runtimeState';
-import {DataProjectStore} from '@/stores/project';
+import type { RuntimeState } from '@/stores/runtimeState';
+import type { DataProjectStore } from '@/stores/project';
 
 const videoPlayer = ref(null)
 
@@ -89,7 +89,7 @@ watch(
       const videoPlayerOptions = {
         autoplay: false,
         controls: true,
-        preload: 'auto',
+        preload: 'auto' as videojs.Preload,
         sources: props.projectStore.videoPlayerSources
       }
       data.player = videojs(videoPlayer.value, videoPlayerOptions, function onPlayerReady() {

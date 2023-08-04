@@ -55,6 +55,7 @@ import {onMounted, onBeforeUnmount, computed, reactive, watch} from 'vue';
 import { useRoute } from 'vue-router';
 import { useProjectStore } from '@/stores/project';
 import { RuntimeState } from '@/stores/runtimeState';
+import type { Asset, ProjectListItem } from '@/types.d.ts';
 import ThumbnailArea from '@/components/ThumbnailArea.vue';
 import VideoPlayer from '@/components/VideoPlayer.vue';
 import TimelineArea from '@/components/TimelineArea.vue';

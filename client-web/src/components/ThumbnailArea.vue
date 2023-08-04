@@ -54,10 +54,12 @@
 </template>
 
 <script setup lang="ts">
-import { UIRenderer, UILayout } from 'uirenderer-canvas';
-import { DataProjectStore } from '@/stores/project';
+import { UIRenderer, UILayout, type vec2, type vec4 } from 'uirenderer-canvas';
+import type { Asset, AssetType, Sequence, Shot, TaskStatus, TaskType } from '@/types.d.ts';
+import type { DataProjectStore } from '@/stores/project';
+import type { RuntimeState } from '@/stores/runtimeState';
 import { reactive, computed, watch, onMounted, nextTick, ref } from 'vue';
-import { RuntimeState } from '@/stores/runtimeState';
+import type { ProcessedUser } from '@/types.d.ts';
 
 const canvasThumbGrid = ref(null)
 const canvasThumbGridText = ref(null)
@@ -87,15 +89,15 @@ class Data {
   ui2D?: CanvasRenderingContext2D;
   // Thumbnail rendering.
   shotsTexBundleID?: WebGLTexture; // Rendering context texture ID for the packed thumb images for shots.
-  shotsOriginalImageSize = [0, 0]; // Resolution of the provided thumbnail images.
+  shotsOriginalImageSize = [0, 0] as vec2; // Resolution of the provided thumbnail images.
   assetsTexBundleID?: WebGLTexture;
-  assetsOriginalImageSize = [0, 0];
-  thumbnailSize = [0, 0]; // Resolution at which to render the thumbnails.
+  assetsOriginalImageSize = [0, 0] as vec2;
+  thumbnailSize = [0, 0] as vec2; // Resolution at which to render the thumbnails.
   thumbnails: UILayout.ThumbnailImage[] = []; // Display info for the thumbs that should be rendered. List of UILayout.ThumbnailImage.
-  duplicatedThumbs: UILayout.ThumbnailImage[] = []; // Keep track of thumbnails that represent the same shot (because it shows in multiple groups).
+  duplicatedThumbs: Array<{idx: number, thumbs: UILayout.ThumbnailImage[]}> = []; // Keep track of thumbnails that represent the same shot (because it shows in multiple groups).
   // Grouped view.
   thumbGroups: UILayout.ThumbnailGroup[] = []; // Display info for groups. List of UILayout.ThumbnailGroup.
-  summaryText = { str: '', pos: [0, 0], }; // Heading with aggregated information of the displayed groups.
+  summaryText = { str: '', pos: [0, 0] as vec2, }; // Heading with aggregated information of the displayed groups.
   // Assignees.
   usersTexBundleID?: WebGLTexture; // Rendering context texture ID for the packed user avatar images.
   // Interaction.
@@ -113,15 +115,15 @@ const data = reactive(new Data())
 const uiConfig =  {
   // Layout constants.
   fontSize: 12,
-  selectedHighlight: { width: 1.5, color: [1.0, 0.561, 0.051, 1.0], },
-  currFrameHighlight: { width: 1.5, color: [0.85, 0.8, 0.7, 1.0], },
-  castingHighlight: { width: 1.5, color: [0.2, 0.58, 0.8, 1.0], },
-  thumbOverlayInfo: { textPad: 5, color: [0.11, 0.11, 0.11, 0.8] },
-  taskStatus: { radius: 5, offsetX: 5, offsetY: 6, disabledColor: [0.05, 0.05, 0.05, 0.8] },
+  selectedHighlight: { width: 1.5, color: [1.0, 0.561, 0.051, 1.0] as vec4, },
+  currFrameHighlight: { width: 1.5, color: [0.85, 0.8, 0.7, 1.0] as vec4, },
+  castingHighlight: { width: 1.5, color: [0.2, 0.58, 0.8, 1.0] as vec4, },
+  thumbOverlayInfo: { textPad: 5, color: [0.11, 0.11, 0.11, 0.8] as vec4 },
+  taskStatus: { radius: 5, offsetX: 5, offsetY: 6, disabledColor: [0.05, 0.05, 0.05, 0.8] as vec4 },
   assignees: { avatarSize: 32, offsetX: 5, offsetY: 5, spaceInBetween: 2 },
   // View.
   minMargin: 40, // Minimum padding, in pixels, around the thumbnail area. Divide by 2 for one side.
-  totalSpacing: [150, 150], // Maximum accumulated space between thumbs + margin.
+  totalSpacing: [150, 150] as vec2, // Maximum accumulated space between thumbs + margin.
   // Grouped view.
   groupedView: {
     summaryText: { spaceBefore: -10, spaceAfter: 12, },
@@ -182,7 +184,7 @@ function initCanvas() {
   data.uiRenderer = new UIRenderer(data.canvas, draw);
 
   data.canvasText = canvasThumbGridText.value! as HTMLCanvasElement;
-  data.ui2D = data.canvasText.getContext('2d');
+  data.ui2D = data.canvasText.getContext('2d')!;
 
   // Resize the canvas to fill browser window dynamically
   window.addEventListener('resize', () => {resizeCanvas()}, false);
@@ -201,20 +203,21 @@ function refreshAndDraw() {
 }
 
 function draw() {
+  const ui2D = data.ui2D!; // Guaranteed to exist. It's created onMount.
   const ui = data.uiRenderer!; // UIRenderer is guaranteed to exist. It's created onMount.
   ui.beginFrame();
 
   // Setup style for the text rendering in the overlaid canvas for text.
   const fontSize = uiConfig.fontSize;
-  data.ui2D.clearRect(0, 0, data.canvasText!.width, data.canvasText!.height);
-  data.ui2D.fillStyle = 'rgb(220, 220, 220)';
-  data.ui2D.font = fontSize + 'px sans-serif';
-  data.ui2D.textAlign = 'left';
-  data.ui2D.textBaseline = 'top';
-  data.ui2D.shadowOffsetX = 2;
-  data.ui2D.shadowOffsetY = 2;
-  data.ui2D.shadowBlur = 2;
-  data.ui2D.shadowColor = 'rgba(0, 0, 0, 0.5)';
+  ui2D.clearRect(0, 0, data.canvasText!.width, data.canvasText!.height);
+  ui2D.fillStyle = 'rgb(220, 220, 220)';
+  ui2D.font = fontSize + 'px sans-serif';
+  ui2D.textAlign = 'left';
+  ui2D.textBaseline = 'top';
+  ui2D.shadowOffsetX = 2;
+  ui2D.shadowOffsetY = 2;
+  ui2D.shadowBlur = 2;
+  ui2D.shadowColor = 'rgba(0, 0, 0, 0.5)';
 
   // If the resulting layout makes the images too small, skip rendering.
   let hasProblemMsg = null;
@@ -233,15 +236,15 @@ function draw() {
 
   if (hasProblemMsg) {
     // Show a user message indicating why the view is empty
-    data.ui2D.textAlign = 'center';
-    data.ui2D.textBaseline = 'middle';
-    data.ui2D.fillText(hasProblemMsg, data.canvasText!.width * 0.5, data.canvasText!.height * 0.5);
+    ui2D.textAlign = 'center';
+    ui2D.textBaseline = 'middle';
+    ui2D.fillText(hasProblemMsg, data.canvasText!.width * 0.5, data.canvasText!.height * 0.5);
     ui.draw();
     return;
   }
 
   // Draw the thumbnails.
-  const imgBundle = (data.mode === 'shots') ? data.shotsTexBundleID : data.assetsTexBundleID;
+  const imgBundle = ((data.mode === 'shots') ? data.shotsTexBundleID : data.assetsTexBundleID) as WebGLTexture;
   for (const thumb of data.thumbnails) {
     ui.addImageFromBundle(thumb.pos[0], thumb.pos[1], thumbSize[0], thumbSize[1], imgBundle, thumb.objIdx);
   }
@@ -250,11 +253,11 @@ function draw() {
   // Check if there is enough space to show shot names
   const thumbInfoSpacing = uiConfig.thumbOverlayInfo.textPad;
   const textHeightOffset = thumbSize[1] - fontSize - thumbInfoSpacing;
-  const widthForInfo = thumbSize[0] - (data.ui2D.measureText('..').width + thumbInfoSpacing * 2);
+  const widthForInfo = thumbSize[0] - (ui2D.measureText('..').width + thumbInfoSpacing * 2);
   let infoMode = 0;
   if (data.mode === 'shots') {
-    const widthForShotName = data.ui2D.measureText('010_0010_A').width; // Sample shot name
-    const widthForExtras =  data.ui2D.measureText(' - 15.5s').width; // Example
+    const widthForShotName = ui2D.measureText('010_0010_A').width; // Sample shot name
+    const widthForExtras = ui2D.measureText(' - 15.5s').width; // Example
     if (widthForInfo > widthForShotName) { infoMode = 1; }
     if (widthForInfo > (widthForShotName + widthForExtras)) { infoMode = 2; }
   } else {
@@ -262,12 +265,13 @@ function draw() {
   }
   if (infoMode > 0) {
     for (const thumb of data.thumbnails) {
-      let info = thumb.obj.name
+      const thumbObj = thumb.obj as Shot;
+      let info = thumbObj.name
         + (data.duplicatedThumbs[thumb.objIdx] ? '**' : '')
-        + (infoMode === 2 ? ' - ' + thumb.obj.durationSeconds.toFixed(1) + 's' : '');
+        + (infoMode === 2 ? ' - ' + thumbObj.durationSeconds.toFixed(1) + 's' : '');
       if (infoMode === 3) {
         const uncroppedInfo = info;
-        while (data.ui2D.measureText(info).width > widthForInfo) {
+        while (ui2D.measureText(info).width > widthForInfo) {
           info = info.slice(0, -1);
         }
         if (info !== uncroppedInfo) {
@@ -281,7 +285,7 @@ function draw() {
           uiConfig.thumbOverlayInfo.color
       );
 
-      data.ui2D.fillText(info, thumb.pos[0] + thumbInfoSpacing, thumb.pos[1] + textHeightOffset);
+      ui2D.fillText(info, thumb.pos[0] + thumbInfoSpacing, thumb.pos[1] + textHeightOffset);
     }
   }
 
@@ -312,7 +316,8 @@ function draw() {
         for (const thumb of data.thumbnails) {
           let hasStatusForTask = false;
           // Search if the shot has a status for the current task type.
-          for (const taskStatus of thumb.obj.tasks) {
+          const thumbObj = thumb.obj as Shot;
+          for (const taskStatus of thumbObj.tasks) {
             if (taskStatus.task_type_id === taskType.id) {
               // It does, get the color for the status of this task.
               for (const status of props.projectStore.taskStatuses) { // e.g. "Done"
@@ -322,7 +327,7 @@ function draw() {
                   } else if (data.statusDispMode === 'stripes') {
                     ui.addRect(thumb.pos[0], thumb.pos[1] + thumbSize[1] - 6, thumbSize[0], 6, status.color);
                   } else {
-                    const color = [status.color[0], status.color[1], status.color[2], 0.4];
+                    const color = [status.color[0], status.color[1], status.color[2], 0.4] as vec4;
                     ui.addRect(thumb.pos[0], thumb.pos[1], thumbSize[0], thumbSize[1], color);
                   }
                   break;
@@ -353,7 +358,8 @@ function draw() {
         const stepX = avatarSize + uiConfig.assignees.spaceInBetween;
         for (const thumb of data.thumbnails) {
           // Search if the shot has a status for the current task type.
-          for (const taskStatus of thumb.obj.tasks) {
+          const thumbObj = thumb.obj as Shot;
+          for (const taskStatus of thumbObj.tasks) {
             if (taskStatus.task_type_id === taskType.id) {
               // It does, get the assignee(s).
               for (let aIdx = 0; aIdx < taskStatus.assignees.length; aIdx++) {
@@ -362,7 +368,7 @@ function draw() {
                     ui.addImageFromBundle(
                       thumb.pos[0] + offsetW - aIdx * stepX, thumb.pos[1] + offsetH,
                       avatarSize, avatarSize,
-                      data.usersTexBundleID, i, avatarSize * 0.5
+                      data.usersTexBundleID!, i, avatarSize * 0.5
                     );
                     break;
                   }
@@ -379,9 +385,10 @@ function draw() {
   // Draw a border around the thumbnail(s) of assets used in the current shot.
   if (data.mode === 'assets' && data.activeShot) {
     const rim = uiConfig.castingHighlight;
-    const transp_overlay_color = [rim.color[0], rim.color[1], rim.color[2], 0.4];
+    const transp_overlay_color = [rim.color[0], rim.color[1], rim.color[2], 0.4] as vec4;
     for (const thumb of data.thumbnails) {
-      if (thumb.obj.shot_ids.includes(data.activeShot.id)) {
+      const thumbObj = thumb.obj as Asset;
+      if (thumbObj.shot_ids.includes(data.activeShot.id)) {
         ui.addRect(thumb.pos[0], thumb.pos[1], thumbSize[0], thumbSize[1], transp_overlay_color);
         ui.addFrame(thumb.pos[0], thumb.pos[1], thumbSize[0], thumbSize[1], rim.width, rim.color, 1);
       }
@@ -405,7 +412,8 @@ function draw() {
     const rim = uiConfig.selectedHighlight;
     for (const asset of props.runtimeState.selectedAssets) {
       for (const thumb of data.thumbnails) {
-        if (thumb.obj.id === asset.id) {
+        const thumbObj = thumb.obj as Asset;
+        if (thumbObj.id === asset.id) {
           ui.addFrame(thumb.pos[0], thumb.pos[1], thumbSize[0], thumbSize[1], rim.width, rim.color, 1);
         }
       }
@@ -417,7 +425,7 @@ function draw() {
 
     // Draw the aggregated group information.
     if (data.summaryText.str) {
-      data.ui2D.fillText(data.summaryText.str, data.summaryText.pos[0], data.summaryText.pos[1]);
+      ui2D.fillText(data.summaryText.str, data.summaryText.pos[0], data.summaryText.pos[1]);
     }
 
     // Draw each group.
@@ -428,7 +436,7 @@ function draw() {
         group.color, 1
       );
       // Draw group name.
-      data.ui2D.fillText(group.name, group.namePos[0], group.namePos[1]);
+      ui2D.fillText(group.name, group.namePos[0], group.namePos[1]);
     }
   }
 
@@ -568,12 +576,13 @@ function refreshThumbnailGroups() {
 
   // Assign thumbnails to groups.
   const objBelongsToGroup =
-    groupBySequence ? ((objToGroupBy, shot: Shot) => { return objToGroupBy.id === shot.sequence_id; }) :
-    groupByAssetType ? ((objToGroupBy, asset: Asset) => { return objToGroupBy.id === asset.asset_type_id; }) :
-    groupByStatus ? ((objToGroupBy, shotOrAsset: Shot|Asset) => {
+    groupBySequence ? ((objToGroupBy: Sequence, shot: Shot) => { return objToGroupBy.id === shot.sequence_id; }) :
+    groupByAssetType ? ((objToGroupBy: AssetType, asset: Asset) => { return objToGroupBy.id === asset.asset_type_id; }) :
+    groupByStatus ? ((objToGroupBy: TaskStatus, shotOrAsset: Shot | Asset) => {
+      const currTaskType = data.currTaskType !== null ? data.currTaskType.id : "";
       // Search if the shot/asset has a status for the current task type.
       for (const taskStatus of shotOrAsset.tasks) {
-        if (taskStatus.task_type_id === data.currTaskType.id) {
+        if (taskStatus.task_type_id === currTaskType) {
           // It does. Does the status match the given thumbnail group?
           return (taskStatus.task_status_id === objToGroupBy.id);
         }
@@ -581,10 +590,11 @@ function refreshThumbnailGroups() {
       // Shot/asset doesn't have a task status for the given task type.
       return false;
     }) : /* groupByAssignee */
-      ((objToGroupBy, shotOrAsset: Shot|Asset) => {
+      ((objToGroupBy: ProcessedUser, shotOrAsset: Shot | Asset) => {
+        const currTaskType = data.currTaskType !== null ? data.currTaskType.id : "";
         // Search if the shot/asset has a status for the current task type.
         for (const taskStatus of shotOrAsset.tasks) {
-          if (taskStatus.task_type_id === data.currTaskType.id) {
+          if (taskStatus.task_type_id === currTaskType) {
             // It does. Does any assignee match the given one?
             for (const assignee of taskStatus.assignees) {
               if (assignee === objToGroupBy.id) {
@@ -602,7 +612,9 @@ function refreshThumbnailGroups() {
     // Find all the groups that the shot/asset of this thumbnail belongs to.
     const groupsObjBelongsTo = [];
     for (let j = 0; j < thumbGroups.length; j++) {
-      if (objBelongsToGroup(thumbGroups[j].criteriaObj, data.thumbnails[i].obj)) {
+      const criteriaObj = thumbGroups[j].criteriaObj as Sequence | AssetType | TaskStatus | ProcessedUser;
+      const thumbObj = data.thumbnails[i].obj as Shot | Asset;
+      if (objBelongsToGroup(criteriaObj, thumbObj)) {
         groupsObjBelongsTo.push(j);
       }
     }
@@ -615,13 +627,14 @@ function refreshThumbnailGroups() {
       let thumbIdx = i;
       if (g >= 1) {
         // Create a duplicate thumbnail if the shot is in multiple groups.
-        thumbIdx = data.thumbnails.push(new UILayout.ThumbnailImage(
-          data.thumbnails[i].obj, data.thumbnails[i].objIdx)
+        const thumb = data.thumbnails[i];
+        thumbIdx = data.thumbnails.push(
+          new UILayout.ThumbnailImage(thumb.obj, thumb.objIdx)
         ) - 1;
-        if (!data.duplicatedThumbs[data.thumbnails[i].objIdx]) {
-          data.duplicatedThumbs[data.thumbnails[i].objIdx] = [data.thumbnails[i]];
+        if (!data.duplicatedThumbs[thumb.objIdx]) {
+          data.duplicatedThumbs[thumb.objIdx] = [thumb];
         }
-        data.duplicatedThumbs[data.thumbnails[i].objIdx].push(data.thumbnails[thumbIdx]);
+        data.duplicatedThumbs[thumb.objIdx].push(data.thumbnails[thumbIdx]);
       }
       group.thumbIdxs.push(thumbIdx);
       data.thumbnails[thumbIdx].group = group;
@@ -645,7 +658,7 @@ function refreshThumbnailGroups() {
     if (data.mode === 'shots') {
       // Add total duration and shot count to the group name.
       for (const thumbIdx of group.thumbIdxs) {
-        durationInSeconds += data.thumbnails[thumbIdx].obj.durationSeconds;
+        durationInSeconds += (data.thumbnails[thumbIdx].obj as Shot).durationSeconds;
       }
       group.name += ' (shots: ' + group.thumbIdxs.length + ',  '
                     + secToStr(durationInSeconds) + ')';
@@ -691,7 +704,8 @@ function findThumbnailForCurrentFrame() {
 
   let thumbForCurrentFrame = null;
   for (const thumb of data.thumbnails) {
-    if(thumb.obj.startFrame > props.runtimeState.currentFrame)
+    const thumbObj = thumb.obj as Shot;
+    if(thumbObj.startFrame > props.runtimeState.currentFrame)
       break;
     thumbForCurrentFrame = thumb;
   }
@@ -740,9 +754,9 @@ function onMouseEvent(event: MouseEvent) {
         && thumb.pos[1] <= mouse.y && mouse.y <= thumb.pos[1] + thumbSize[1]) {
         hitThumb = true;
         if (data.mode === 'shots') {
-          emit('setCurrentFrame', thumb.obj.startFrame);
+          emit('setCurrentFrame', (thumb.obj as Shot).startFrame);
         } else {
-          emit('setSelectedAssets', [thumb.obj]);
+          emit('setSelectedAssets', [(thumb.obj as Asset)]);
         }
         break;
       }
@@ -884,12 +898,12 @@ watch(
   (users) => {
 
     if (users.length) {
-      const thumb_size = [400, 400]; // WIP
+      const thumb_size = [400, 400] as vec2; // WIP
       const thumb_urls = []
       for (const user of users) {
         thumb_urls.push(user.profilePicture);
       }
-      data.usersTexBundleID = data.uiRenderer.loadImageBundle(thumb_urls, thumb_size);
+      data.usersTexBundleID = data.uiRenderer!.loadImageBundle(thumb_urls, thumb_size);
     }
 
     refreshAndDraw();
@@ -914,7 +928,7 @@ watch(
         for (const shot of shots) {
           thumb_urls.push(shot.thumbnailUrl);
         }
-        data.shotsTexBundleID = data.uiRenderer.loadImageBundle(thumb_urls, thumb_size);
+        data.shotsTexBundleID = data.uiRenderer!.loadImageBundle(thumb_urls, thumb_size);
       }
 
     refreshAndDraw();
@@ -934,7 +948,7 @@ watch(
       for (const asset of assets) {
         thumb_urls.push(asset.thumbnailUrl);
       }
-      data.assetsTexBundleID = data.uiRenderer.loadImageBundle(thumb_urls, thumb_size);
+      data.assetsTexBundleID = data.uiRenderer!.loadImageBundle(thumb_urls, thumb_size);
     }
 
     refreshAndDraw();

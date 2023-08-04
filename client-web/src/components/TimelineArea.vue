@@ -26,11 +26,11 @@
 
 <script setup lang="ts">
 
-import { UIRenderer } from 'uirenderer-canvas';
+import { UIRenderer, type vec4 } from 'uirenderer-canvas';
+import type { Shot } from '@/types.d.ts';
 import { DataProjectStore } from '@/stores/project';
-import { reactive, ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { RuntimeState } from '@/stores/runtimeState';
-
+import { reactive, ref, computed, watch, onMounted, onUnmounted } from 'vue';
 
 const emit = defineEmits<{
   (event: 'setCurrentFrame', frameNumber: number): void
@@ -76,18 +76,18 @@ const uiConfig = {
   // Layout constants.
   fontSize: 12,
   margin: {x: 15, top: 22, bottom: 7}, // Spacing around the contents of the timeline canvas. One side, in px.
-  currFrameHighlight: { width: 1.5, color: [0.85, 0.8, 0.7, 1.0], },
-  castingHighlight: { width: 1.5, color: [0.2, 0.58, 0.8, 1.0], },
+  currFrameHighlight: { width: 1.5, color: [0.85, 0.8, 0.7, 1.0] as vec4, },
+  castingHighlight: { width: 1.5, color: [0.2, 0.58, 0.8, 1.0] as vec4, },
   playhead: {
     padY: 8, // From the absolute top. Ignores 'margin'.
     triangle: {width: 12.0, height: 8.0, flatHeight: 4.0},
     lineWidth: 2.0,
-    color: [0.85, 0.8, 0.7, 1.0],
-    shadow: { radius: 1.5, color: [0, 0, 0, 0.5] },
+    color: [0.85, 0.8, 0.7, 1.0] as vec4,
+    shadow: { radius: 1.5, color: [0, 0, 0, 0.5] as vec4 },
   },
   timeline: {
     padX: 20,
-    frame0Color: [0.36, 0.36, 0.36, 1.0],
+    frame0Color: [0.36, 0.36, 0.36, 1.0] as vec4,
   },
   sequences: {
     fontPad: {x: 2, top: 3, bottom: 1},
@@ -101,14 +101,14 @@ const uiConfig = {
     channelHeight: 40,
     lineWidth: 1,
     corner: 0,
-    color: [0.3, 0.3, 0.3, 1.0],
+    color: [0.3, 0.3, 0.3, 1.0] as vec4,
   },
   channels: {
     namePadX: 8,
     height: 24,
     contentHeight: 12,
-    colorOdd: [0.12, 0.12, 0.12, 1.0],
-    colorEven: [0.16, 0.16, 0.16, 1.0],
+    colorOdd: [0.12, 0.12, 0.12, 1.0] as vec4,
+    colorEven: [0.16, 0.16, 0.16, 1.0] as vec4,
   }
 }
 
@@ -185,7 +185,7 @@ function initCanvas() {
   data.uiRenderer = new UIRenderer(data.canvas, draw);
 
   data.canvasText = canvasTimelineText.value! as HTMLCanvasElement;
-  data.ui2D = data.canvasText.getContext('2d');
+  data.ui2D = data.canvasText.getContext('2d')!;
 
   // Resize the canvas to fill browser window dynamically
   window.addEventListener('resize', () => {resizeCanvas()}, false);
@@ -196,13 +196,15 @@ function initCanvas() {
 }
 
 function updateChannelNamesWidth() {
+  const ui2D = data.ui2D!; // Guaranteed to exist. It's created onMount.
+
   // Calculate the width in px needed to fit all possible channel names.
-  let channelNamesWidth = data.ui2D.measureText('Sequences').width;
+  let channelNamesWidth = ui2D.measureText('Sequences').width;
   for (const task of taskTypesForShots.value) {
-    channelNamesWidth = Math.max(channelNamesWidth, data.ui2D.measureText(task.name).width);
+    channelNamesWidth = Math.max(channelNamesWidth, ui2D.measureText(task.name).width);
   }
   for (const asset of props.projectStore.assets) {
-    channelNamesWidth = Math.max(channelNamesWidth, data.ui2D.measureText(asset.name).width);
+    channelNamesWidth = Math.max(channelNamesWidth, ui2D.measureText(asset.name).width);
   }
 
   // Use the widest name found, but clamp to a fixed max width to guard against unreasonably long strings from data.
@@ -211,20 +213,21 @@ function updateChannelNamesWidth() {
 
 function draw() {
   const rect = getCanvasRect();
+  const ui2D = data.ui2D!; // Guaranteed to exist. It's created onMount.
   const ui = data.uiRenderer!; // UIRenderer is guaranteed to exist. It's created onMount.
   ui.beginFrame();
 
   // Setup style for the text rendering in the overlaid canvas for text.
   const fontSize = uiConfig.fontSize;
-  data.ui2D.clearRect(0, 0, data.canvasText!.width, data.canvasText!.height);
-  data.ui2D.fillStyle = 'rgb(220, 220, 220)';
-  data.ui2D.font = fontSize + 'px sans-serif';
-  data.ui2D.textAlign = 'left';
-  data.ui2D.textBaseline = 'top';
-  data.ui2D.shadowOffsetX = 1;
-  data.ui2D.shadowOffsetY = 1;
-  data.ui2D.shadowBlur = 2;
-  data.ui2D.shadowColor = 'rgba(0, 0, 0, 0.5)';
+  ui2D.clearRect(0, 0, data.canvasText!.width, data.canvasText!.height);
+  ui2D.fillStyle = 'rgb(220, 220, 220)';
+  ui2D.font = fontSize + 'px sans-serif';
+  ui2D.textAlign = 'left';
+  ui2D.textBaseline = 'top';
+  ui2D.shadowOffsetX = 1;
+  ui2D.shadowOffsetY = 1;
+  ui2D.shadowBlur = 2;
+  ui2D.shadowColor = 'rgba(0, 0, 0, 0.5)';
 
   // Calculate size and position of elements.
   const margin = uiConfig.margin;
@@ -295,7 +298,7 @@ function draw() {
   if (data.showSelectedAssets) {
     for (const asset of props.runtimeState.selectedAssets) {
       // Get the contiguous frame ranges where this asset appears.
-      let {startPos, widths} = getRangesWhere((shot: Shot) => { return shot.asset_ids.includes(asset.id); });
+      const {startPos, widths} = getRangesWhere((shot: Shot) => { return shot.asset_ids.includes(asset.id); });
       // Draw a rect for each range of shots.
       for (let i = 0; i < startPos.length; i++) {
         ui.addRect(startPos[i], channelY, widths[i], taskHeight, uiConfig.castingHighlight.color);
@@ -309,7 +312,7 @@ function draw() {
     for (const taskType of taskTypesForShots.value) { // e.g. "Animation"
       for (const status of props.projectStore.taskStatuses) { // e.g. "Done"
         // Get the contiguous frame ranges for this task status.
-        let {startPos, widths} = getRangesWhere((shot: Shot) => {
+        const {startPos, widths} = getRangesWhere((shot: Shot) => {
           // Search if the shot has a status for the current task type.
           for (const taskStatus of shot.tasks) {
             if (taskStatus.task_type_id === taskType.id) {
@@ -330,7 +333,7 @@ function draw() {
 
   // Draw sequences
   const seqCorner = uiConfig.sequences.corner;
-  data.ui2D.font = seqFontSize + 'px sans-serif';
+  ui2D.font = seqFontSize + 'px sans-serif';
   for (const sequence of props.projectStore.sequences) {
     // Find continuous ranges of shots that belong to this sequence.
     // In theory, a sequence has a single contiguous range, but in practice,
@@ -345,20 +348,20 @@ function draw() {
       const clipL = Math.max(view.transformPosX(startPos[0]), view.left);
       const clipR = Math.min(view.transformPosX(startPos[0] + widths[0]), view.right);
       const clippedWidth = clipR - clipL;
-      const availableWidth = clippedWidth - seqTextPad.x * 2 - data.ui2D.measureText('..').width;
+      const availableWidth = clippedWidth - seqTextPad.x * 2 - ui2D.measureText('..').width;
       if (availableWidth > 0) {
         let name = sequence.name;
-        while (data.ui2D.measureText(name).width > availableWidth) {
+        while (ui2D.measureText(name).width > availableWidth) {
           name = name.slice(0, -1);
         }
         if (name !== sequence.name) {
           name += '..';
         }
-        data.ui2D.fillText(name, clipL + seqTextPad.x, seqTop - (seqFontSize + seqTextPad.bottom));
+        ui2D.fillText(name, clipL + seqTextPad.x, seqTop - (seqFontSize + seqTextPad.bottom));
       }
     }
   }
-  data.ui2D.font = fontSize + 'px sans-serif';
+  ui2D.font = fontSize + 'px sans-serif';
 
   ui.popView();
 
@@ -415,19 +418,19 @@ function draw() {
   const halfFontSize = fontSize / 2;
   const textX = margin.x + uiConfig.channels.namePadX;
   let textY = margin.top + Math.round(seqChannelHeight / 2) - halfFontSize;
-  data.ui2D.fillText('Sequences', textX, textY);
+  ui2D.fillText('Sequences', textX, textY);
   textY = shotChannelTop + Math.round(shotChannelHeight / 2) - halfFontSize;
-  data.ui2D.fillText('Shots', textX, textY);
+  ui2D.fillText('Shots', textX, textY);
   textY = channelStartY + Math.round(channelStep / 2) - halfFontSize;
   if (data.showSelectedAssets) {
     for (const asset of props.runtimeState.selectedAssets) {
-      data.ui2D.fillText(asset.name, textX, textY);
+      ui2D.fillText(asset.name, textX, textY);
       textY += channelStep;
     }
   }
   if (props.runtimeState.isShowingTimelineTasks) {
     for (const task of taskTypesForShots.value) {
-      data.ui2D.fillText(task.name, textX, textY);
+      ui2D.fillText(task.name, textX, textY);
       textY += channelStep;
     }
   }
@@ -437,7 +440,7 @@ function draw() {
 }
 
 // Find continuous ranges of shots where the given condition is true.
-function getRangesWhere(hasProp: Function) {
+function getRangesWhere(hasProp: (shot: Shot) => boolean) {
   let currRange = -1;
   const startFrames = [];
   const endFrames = [];

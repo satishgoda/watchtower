@@ -16,6 +16,8 @@ module.exports = {
     "files": ["*.ts", "*.vue"],
     "rules": {
       "no-undef": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-non-null-assertion": "off"
     },
   },
 ],
