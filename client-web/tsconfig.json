@@ -1,18 +1,31 @@
 {
-  "extends": "@vue/tsconfig/tsconfig.web.json",
-  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "include": ["env.d.ts", "./src/**/*", "./src/**/*.vue"],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
+      "@/*": ["./src/*"]
     },
-    "typeRoots": ["./src/types"],
-    "lib": ["dom","es2018"],
-  },
 
-  "references": [
-    {
-      "path": "./tsconfig.config.json"
-    }
-  ]
+    "target": "ES2022",
+    "lib": ["dom", "ES2022"],
+
+    /* Modules */
+    "isolatedModules": true, // For compatibility with Vite's HMR.
+
+    /* Emit */
+    "declarationDir": "./src/types",
+    "declaration": true,
+    "declarationMap": true,
+
+    /* Type Checking */
+    "strict": true,
+    "noImplicitAny": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": true
+  }
 }
