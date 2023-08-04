@@ -61,7 +61,7 @@ import TimelineArea from '@/components/TimelineArea.vue';
 
 const projectStore = new useProjectStore();
 const route = useRoute();
-const projectId = route.params.projectId as string;
+const projectId = route.params['projectId'] as string;
 projectStore.initWithProject(projectId);
 
 const emit = defineEmits<{

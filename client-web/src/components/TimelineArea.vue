@@ -590,7 +590,7 @@ function onKeyDown(event: KeyboardEvent) {
   } else if (event.key === 'ArrowRight') {
     if (!data.shotForCurrentFrame) {return}
     const idx = props.projectStore.shots.indexOf(data.shotForCurrentFrame);
-    const newIdx = Math.min(projectStore.shots.length, (idx === -1) ? 0 : idx + 1);
+    const newIdx = Math.min(props.projectStore.shots.length, (idx === -1) ? 0 : idx + 1);
     emit('setCurrentFrame', props.projectStore.shots[newIdx].startFrame)
   } else if (event.key === 'ArrowLeft') {
     if (!data.shotForCurrentFrame) {return}

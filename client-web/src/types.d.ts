@@ -1,3 +1,5 @@
+import type { vec4 } from 'uirenderer-canvas';
+
 type Task = {
   task_status_id: string;
   task_type_id: string;
@@ -19,8 +21,9 @@ type Shot = {
 };
 
 type Sequence = {
-  name: string;
   id: string;
+  name: string;
+  color: vec4;
 }
 
 type Asset = {
@@ -33,14 +36,14 @@ type Asset = {
 }
 
 type TaskType = {
-  color: Array<number>;
+  color: vec4;
   for_shots: boolean;
   id: string;
   name: string;
 };
 
 type TaskStatus = {
-  color: Array<number>;
+  color: vec4;
   id: string;
   name: string;
 };
@@ -48,6 +51,7 @@ type TaskStatus = {
 type AssetType = {
   id: string;
   name: string;
+  color: vec4;
 };
 
 type User = {
@@ -61,7 +65,7 @@ type ProcessedUser = {
   id: string;
   name: string;
   profilePicture: string;
-  color?: string;
+  color?: vec4;
 }
 
 type ShotCasting = {
