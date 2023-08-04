@@ -32,16 +32,23 @@ Watchtower runs as static web application, and use JSON file as data source.
 Here is how such data should be structured:
 
 ```
-projects/
-├── <project-id>/
-│   ├── assets.json
-│   ├── casting.json
-│   ├── edit.json
-│   ├── edit.mp4
-│   ├── project.json
-│   ├── sequences.json
-│   └── shots.json
-└── context.json
+data
+├── projects
+│   ├── <project-id>
+│   │   ├── previews
+│   │   │   └── ...
+│   │   ├── assets.json
+│   │   ├── casting.json
+│   │   ├── edit.json
+│   │   ├── edit.mp4
+│   │   ├── project.json
+│   │   ├── sequences.json
+│   │   └── shots.json
+│   └── ...
+└── projects-list
+    ├── previews
+    │   └── ...
+    └── index.json
 ```
 
 ## Publish an update to Pypi

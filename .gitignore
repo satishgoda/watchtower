@@ -32,7 +32,7 @@ pnpm-debug.log*
 /public/data/projects
 /public/context.json
 /pipeline/dist/
-/pipeline/dist_watchtower/
+/pipeline/dist_client_web/
 /watchtower/
 /client-web/public/data/projects-list
 /client-web/public/data/projects

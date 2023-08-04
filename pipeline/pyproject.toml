@@ -5,7 +5,7 @@ description = "Utilities to generate static data for Watchtower."
 authors = ["Francesco Siddi <francesco@blender.org>"]
 license = "GPL-3.0-or-later"
 readme = "README.md"
-include = ["dist_watchtower/*", "dist_watchtower/*/*",]
+include = ["dist_client_web/*", "dist_client_web/*/*",]
 
 [tool.poetry.dependencies]
 python = "^3.9"

@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
-import argparse
 import logging
 import pathlib
 import requests
-import shutil
 import sys
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Dict
 
-from watchtower_pipeline import models, writers, ffprobe
+from watchtower_pipeline import models, writers, ffprobe, argparser
 
 logging.basicConfig(
     level=logging.INFO,
@@ -90,45 +88,29 @@ class KitsuClient:
         self.jwt = self.fetch_jwt(self.config.email, self.config.password)
 
 
-@dataclass
-class KitsuProjectListWriter:
-    """Writer for the context.json file."""
+class KitsuWriter(writers.AbstractWriter):
 
     kitsu_client: KitsuClient
+    user_context = None
 
-    def fetch_user_context(self):
-        return self.kitsu_client.get('/data/user/context').json()
+    @property
+    def request_headers(self) -> Optional[Dict]:
+        return self.kitsu_client.headers
 
-    def setup(self) -> writers.ProjectListWriter:
-        user_context = self.fetch_user_context()
+    def get_project_list(self) -> List[models.ProjectListItem]:
 
         # Projects
-        projects_list = [
+        return [
             models.ProjectListItem(
                 id=p['id'],
                 name=p['name'],
                 thumbnailUrl=f"{self.kitsu_client.base_url}/pictures/thumbnails/projects/{p['id']}.png",
             )
-            for p in user_context['projects']
+            for p in self.user_context['projects']
         ]
 
-        return writers.ProjectListWriter(
-            projects=projects_list,
-        )
-
-
-@dataclass
-class KitsuProjectWriter:
-    """Writer for project files."""
-
-    kitsu_client: KitsuClient
-
-    def fetch_user_context(self):
-        return self.kitsu_client.get('/data/user/context').json()
-
-    # Project
-    def setup_project(self, project_id) -> models.Project:
-        ctx = self.fetch_user_context()
+    def get_project(self, project_id) -> models.Project:
+        ctx = self.user_context
         # Get the project from the contex
         project_from_context = next(
             filter(lambda item: item['id'] == project_id, ctx['projects']), None
@@ -216,10 +198,9 @@ class KitsuProjectWriter:
             team=team,
         )
 
-    # Assets
-    def get_project_assets(self, project_id):
+    def get_project_assets(self, project) -> List[models.Asset]:
         r_assets = self.kitsu_client.get(
-            '/data/assets/with-tasks', params={'project_id': project_id}
+            '/data/assets/with-tasks', params={'project_id': project.id}
         )
         assets_list = []
 
@@ -249,15 +230,13 @@ class KitsuProjectWriter:
             assets_list.append(asset)
         return assets_list
 
-    # Sequences
-    def get_project_sequences(self, project_id) -> List[models.Sequence]:
-        r_sequences = self.kitsu_client.get('/data/sequences', params={'project_id': project_id})
+    def get_project_sequences(self, project) -> List[models.Sequence]:
+        r_sequences = self.kitsu_client.get('/data/sequences', params={'project_id': project.id})
         sequences_list = []
         for sequence in r_sequences.json():
             sequences_list.append(models.Sequence(name=sequence['name'], id=sequence['id']))
         return sequences_list
 
-    # Shots
     def get_project_shots(self, project: models.Project) -> List[models.Shot]:
         r_shots = self.kitsu_client.get('/data/shots/with-tasks', params={'project_id': project.id})
         shots = []
@@ -293,7 +272,6 @@ class KitsuProjectWriter:
             shots.append(shot)
         return shots
 
-    # Casting
     def get_project_casting(
         self,
         project,
@@ -321,7 +299,6 @@ class KitsuProjectWriter:
 
         return shot_castings
 
-    # Editorial
     def get_project_edit(self, project: models.Project):
 
         logging.info(f"Getting edit for %s" % project.name)
@@ -381,71 +358,29 @@ class KitsuProjectWriter:
             frameOffset=frame_offset,
         )
 
-    def setup(self, project_id):
-        project = self.setup_project(project_id)
-        assets = self.get_project_assets(project.id)
-        sequences = self.get_project_sequences(project.id)
-        shots = self.get_project_shots(project)
-        casting = self.get_project_casting(project, sequences, shots, assets)
-        edit = self.get_project_edit(project)
-        return writers.ProjectWriter(
-            project=project,
-            assets=assets,
-            shots=shots,
-            sequences=sequences,
-            edit=edit,
-            casting=casting,
-        )
+    def __init__(self):
+        self.kitsu_client = KitsuClient()
+        self.user_context = self.kitsu_client.get('/data/user/context').json()
 
-
-def fetch_and_save_projects_list() -> list:
-    kitsu_client = KitsuClient()
-    projects_list_writer = KitsuProjectListWriter(kitsu_client=kitsu_client).setup()
-    projects_list_writer.download_previews(kitsu_client.headers)
-    projects_list_writer.write_as_json()
-    return projects_list_writer.projects
-
-
-def fetch_and_save_project(project_id):
-    kitsu_client = KitsuClient()
-    project_writer = KitsuProjectWriter(kitsu_client=kitsu_client).setup(project_id)
-    project_writer.download_previews(kitsu_client.headers)
-    project_writer.write_as_json()
-
-
-def fetch_and_save_all() -> pathlib.Path:
-    """Set up a Kitsu client, fetch all context and projects data, download assets."""
-
-    for p in fetch_and_save_projects_list():
-        fetch_and_save_project(p.id)
-
-    static_path_dst = pathlib.Path().cwd().absolute() / 'public/static'
-    logging.info(f"Data downloaded in {static_path_dst}")
-    return static_path_dst
+    def write_project(self, project_id, destination_path):
+        project_writer = self._get_project_writer(project_id, destination_path)
+        project_writer.download_previews(self.request_headers)
+        project_writer.write_as_json()
 
 
 def main(args):
-    parser = argparse.ArgumentParser(description="Generate Watchtower content.")
-    parser.add_argument("-b", "--bundle", action=argparse.BooleanOptionalAction)
-    parser.add_argument(
-        "-p",
-        "--projects",
-        nargs="*",
-        type=str,
-        default=[],
-        help="Optional list of projects",
-    )
+    parsed_args = argparser.parse_args(args)
+    destination_path = parsed_args.destination_path
 
-    args = parser.parse_args(args)
+    kitsu_writer = KitsuWriter()
 
-    if args.projects:
-        for a in args.projects:
-            fetch_and_save_project(a)
+    if parsed_args.projects:
+        for a in parsed_args.projects:
+            kitsu_writer.write_project(a, destination_path)
     else:
-        static_path = fetch_and_save_all()
-        if args.bundle:
-            writers.WatchtowerBundler.bundle(static_path)
-            shutil.rmtree(static_path.parent)
+        kitsu_writer.write(destination_path)
+        if parsed_args.bundle:
+            writers.WatchtowerBundler.bundle(destination_path)
 
 
 if __name__ == "__main__":

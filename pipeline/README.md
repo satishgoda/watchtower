@@ -4,7 +4,7 @@ Follow these instructions to deploy Watchtower in your production pipeline.
 
 ## Requirements
 * Python 3.9+
-* A working installation of Kitsu (optional)
+* A source of production data (shots, assets, tasks, etc.)
 
 In order to generate data for Watchtower, follow these steps:
 
@@ -40,4 +40,4 @@ If you use a different production/asset tracking service, some scripting will be
 The following steps are recommended:
 * Set up a new Python project (using virtualenv)
 * Run `pip install watchtower-pipeline`
-* Check `docs/custom-sources.md` for how to use the `watchtower_pipeline` module
+* Check `Integration` for how to use the `watchtower_pipeline` module

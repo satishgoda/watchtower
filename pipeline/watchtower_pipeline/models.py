@@ -9,8 +9,6 @@ from dataclasses import dataclass, asdict, field
 from typing import Any, Dict, List, TypedDict, Optional
 
 
-BASE_PATH = pathlib.Path.cwd()
-
 logging.basicConfig(
     level=logging.INFO,
     format="[%(levelname)s] %(message)s",
@@ -49,6 +47,7 @@ class StaticPreviewMixin:
 
     def download_and_assign_thumbnail(
         self,
+        base_path: pathlib.Path,
         path: Optional[pathlib.Path] = None,
         requests_headers: Optional[Dict] = None,
         force=False,
@@ -70,7 +69,7 @@ class StaticPreviewMixin:
         if not path:
             path = pathlib.Path('')
         dst_url = self.generate_preview_file_path(self.hash_filename(src_url), path)
-        dst = BASE_PATH / 'public' / dst_url
+        dst = base_path / 'public' / dst_url
         self.fetch_and_save_media(src_url, requests_headers, dst, force=force)
         setattr(self, 'thumbnailUrl', str(dst_url))
 

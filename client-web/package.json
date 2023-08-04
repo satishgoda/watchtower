@@ -10,7 +10,7 @@
     "build-only": "vite build",
     "type-check": "vue-tsc --noEmit",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
-    "build-for-py": "vite build --emptyOutDir --outDir ../pipeline/dist_watchtower"
+    "build-for-py": "vite build --emptyOutDir --outDir ../pipeline/dist_client_web"
   },
   "dependencies": {
     "axios": "^1.1.2",

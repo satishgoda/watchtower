@@ -3,131 +3,105 @@ outline: [2,3]
 ---
 # Pipeline Integration
 
-If you are not using Kitsu as data source, you need to develop your own connector to the
-production tracker. This can be done by leveraging the `watchtower_pipeline` library.
+To use Watchtower with your data, you need to write a script (we will call it 'writer') that
+fetches it from your production tracker. This can be done by leveraging the`watchtower_pipeline`
+library.
 
-The goal is to generate the following set of JSON files for each project:
+The goal is to generate the following set of JSON files:
 
 ```
-projects/
-├── <project-id>/
-│   ├── assets.json
-│   ├── casting.json
-│   ├── edit.json
-│   ├── edit.mp4
-│   ├── project.json
-│   ├── sequences.json
-│   └── shots.json
-└── context.json
+data
+├── projects
+│   ├── <project-id>
+│   │   ├── previews
+│   │   │   └── ...
+│   │   ├── assets.json
+│   │   ├── casting.json
+│   │   ├── edit.json
+│   │   ├── edit.mp4
+│   │   ├── project.json
+│   │   ├── sequences.json
+│   │   └── shots.json
+│   └── ...
+└── projects-list
+    ├── previews
+    │   └── ...
+    └── index.json
 ```
 
-This is achieved by setting up a couple of classes (ProjectListWriter and ProjectWriter), that
-will write out the JSON files property formatted for Watchtower.
+This is achieved by setting up a class that extents `AbstractWriter` and implements
+a few methods.
 
-Here is quick list of steps needed to build a custom connector:
+Here is a list of steps needed to build a writer:
 
 - Create a Python virtual environment
 - `pip install watchtower_pipeline`
-- Define a client that can connect/authenticate to the production tracker
-- Define a `ProjectListWriter` which will require 
-  `Users`, `Asset Types`, `Task Types`, `Task Statuses` and `Projects`
-- Define a `ProjectWriter`, which will require
-  `Tasks`, `Assets`, `Sequences`, `Shots`, `Casting` and `Edit`
-- Define a storage strategy for static files (thumbnails and videos), for example:
-  - Create a file downloader that will retrieve and store files from the production tacker
-  - Reference static assets directly on the production tracker
+- Create a new file and define a class that extends `AbstractWriter`
+- Implement the required methods
+- Call the `write()` method
 
-
-
-::: details Some pseudocode for reference
+::: details Copy this code as a starting point
 ```python
 #!/usr/bin/env python3
-from dataclasses import dataclass
-from watchtower_pipeline import writers, models
+import logging
+import sys
+from typing import List
+from watchtower_pipeline import writers, models, argparser
 
 
-@dataclass
-class FoobarClient:
-  """Client used to connect to production API."""
-  pass
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(levelname)s] %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
 
-@dataclass
-class FoobarProjectListWriter:
-  """Used to write context.json
-  
-  This Data Class takes care of fetching and aggregating all the generic
-  information, which is then referenced in each project.
-  """
-  foobar_client: FoobarClient
-  
-  def fetch_user_context(self):
-    return self.foobar_client.get('/path/to/context/data').json()
 
-  def setup(self) -> writers.ProjectListWriter:
-    user_context = self.fetch_user_context()
-    # Iterate through the fetched document and setup
-    # - projects_list
-    # - asset_types_list
-    # - task_types_list
-    # - task_statuses_list
-    # - users_list
+class CustomWriter(writers.AbstractWriter):
 
-    # Pass the datacasses to the ProjectListWriter
-    return writers.ProjectListWriter(
-          projects=projects_list,
-          asset_types=asset_types_list,
-          task_types=task_types_list,
-          task_status=task_statuses_list,
-          users=users_list,
-      )
+    @property
+    def request_headers(self):
+        return
 
-@dataclass
-class FoobarProjectWriter:
-  """Used to write various JSON files in the project folder.
-  
-  Indirectly references the context of FoobarContext.
-  """
-  foobar_client: FoobarClient
-  
-  def get_project_assets(self, project_id):
-    pass
-  
-  def get_project_sequences(self, project_id):
-    pass
-  
-  def get_project_shots(self, project_id):
-    pass
-  
-  def get_project_casting(self, project_id):
-    pass
-  
-  def get_project_edit(self, project_id):
-    pass
+    def get_project_list(self) -> List[models.ProjectListItem]:
+        pass
 
-  def setup(self, p: models.Project):
-    assets = self.get_project_assets(self, p.id)
-    sequences = self.get_project_sequences(self, p.id)
-    shots = self.get_project_shots(self, p)
-    casting = self.get_project_casting(self, p, sequences, shots, assets)
-    edit = self.get_project_edit(self, p)
-    return writers.ProjectWriter(
-        project=p,
-        assets=assets,
-        shots=shots,
-        sequences=sequences,
-        edit=edit,
-        casting=casting,
-    )
+    def get_project(self, project_id) -> models.Project:
+        pass
 
-  def fetch_and_save():
-    foobar_client = FoobarClient()
-    context_writer = FoobarProjectListWriter(foobar_client=foobar_client).setup()
-    context_writer.write_as_json()
-    for p in context_writer.projects:
-      project_writer = FoobarProjectWriter(foobar_client=foobar_client).setup(p)
-      project_writer.write_as_json()
+    def get_project_edit(self, project: models.Project) -> models.Edit:
+        pass
 
-fetch_and_save()
+    def get_project_assets(self, project: models.Project) -> List[models.Asset]:
+        pass
+
+    def get_project_sequences(self, project: models.Project) -> List[models.Sequence]:
+        pass
+
+    def get_project_shots(self, project: models.Project) -> List[models.Shot]:
+        pass
+
+    def get_project_casting(
+        self,
+        project,
+        sequences: List[models.Sequence],
+        shots: List[models.Shot],
+        assets: List[models.Asset],
+    ) -> List[models.ShotCasting]:
+        pass
+
+
+def main(args):
+    parsed_args = argparser.parse_args(args)
+    destination_path = parsed_args.destination_path
+
+    CustomWriter().write(destination_path)
+    if parsed_args.bundle:
+        writers.WatchtowerBundler.bundle(destination_path)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
+
 
 ```
 :::
@@ -224,18 +198,18 @@ tt = models.TaskStatus(
 
 ### Project
 
-| Attribute     | Type            | Default |
-|---------------|-----------------|---------|
-| id            | `Optional[str]` | None    |
-| name          | `str`           | None    |
-| ratio         | `str`           | None    |
-| resolution    | `str`           | None    |
-| asset_types   | `List[str]`     | []      |
-| task_types    | `List[str]`     | []      |
-| task_statuses | `List[str]`     | []      |
-| team          | `List[str]`     | []      |
-| thumbnailUrl  | `Optional[str]` | None    |
-| fps           | `int`           | 24      |
+| Attribute     | Type               | Default |
+|---------------|--------------------|---------|
+| id            | `Optional[str]`    | None    |
+| name          | `str`              | None    |
+| ratio         | `str`              | None    |
+| resolution    | `str`              | None    |
+| asset_types   | `List[AssetType]`  | []      |
+| task_types    | `List[TaskType]`   | []      |
+| task_statuses | `List[TaskStatus]` | []      |
+| team          | `List[User]`       | []      |
+| thumbnailUrl  | `Optional[str]`    | None    |
+| fps           | `int`              | 24      |
 
 #### Example
 
@@ -254,7 +228,28 @@ p = models.Project(
 )
 ```
 
-### Tasks
+
+### ProjectListItem
+This is used in `ProjectsListWriter`.
+
+| Attribute     | Type               | Default |
+|---------------|--------------------|---------|
+| id            | `Optional[str]`    | None    |
+| name          | `str`              | None    |
+| thumbnailUrl  | `Optional[str]`    | None    |
+
+#### Example
+
+```python
+from watchtower_pipeline import models
+
+p = models.ProjectListItem(
+    id='a52cfbb8-bdc8-4df5-94c8-e89695a53d80',
+    name='Sprite Fright',
+)
+```
+
+### Task
 
 | Attribute            | Type            | Default |
 |----------------------|-----------------|---------|
@@ -350,13 +345,7 @@ The JSON files needed by Watchtower are created through the following writers.
 | Attribute   | Type                                | Default |
 |-------------|-------------------------------------|---------|
 | projects    | `List[model.Project]`               | -       |
-| asset_types | `List[models.AssetType]`            | -       |
-| task_types  | `List[models.TaskType]`             | -       |
-| task_status | `List[models.TaskStatus]`           | -       |
-| users       | `List[models.User]`                 | []      |
 
-Once created, we need to call `ProjectListWriter.write_as_json()` to write out the data.
-This will write out the correctly formatted `context.json` file.
 
 ### ProjectWriter
 
@@ -369,5 +358,3 @@ This will write out the correctly formatted `context.json` file.
 | edit      | `models.Edit`              | -       |
 | casting   | `List[models.ShotCasting]` | -       |
 
-Once created, we need to call `ProjectListWriter.write_as_json()` to write out the data.
-This will write out the correctly formatted `context.json` file.
