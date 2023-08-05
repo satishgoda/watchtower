@@ -22,8 +22,14 @@ class ProjectListWriter:
             'projects': [asdict(p) for p in self.projects],
         }
 
-    def download_previews(self, requests_headers: Optional[Dict] = None, force=False):
-        for p in tqdm(self.projects, desc="Downloading Project thumbnails"):
+    def download_previews(
+        self, requests_headers: Optional[Dict] = None, force=False, display_progress=True
+    ):
+        # Set a variable that semantically matches tqdm API (the inverse of what we want our API to do)
+        disable_progress = not display_progress
+        for p in tqdm(
+            self.projects, desc="Downloading Project thumbnails", disable=disable_progress
+        ):
             path = pathlib.Path('projects-list') / 'previews'
             p.download_and_assign_thumbnail(
                 self.destination_path,
@@ -72,21 +78,21 @@ class ProjectWriter:
 
     def download_previews(self, requests_headers: Optional[Dict] = None, force=False):
         path = pathlib.Path('projects') / self.project.id / 'previews'
-        for s in tqdm(self.shots, desc="Downloading Shot thumbnails"):
+        for s in tqdm(self.shots, desc="Downloading Shot thumbnails", ascii=' >='):
             s.download_and_assign_thumbnail(
                 self.destination_path,
                 path=path,
                 requests_headers=requests_headers,
                 force=force,
             )
-        for a in tqdm(self.assets, desc="Downloading Asset thumbnails"):
+        for a in tqdm(self.assets, desc="Downloading Asset thumbnails", ascii=' >='):
             a.download_and_assign_thumbnail(
                 self.destination_path,
                 path=path,
                 requests_headers=requests_headers,
                 force=force,
             )
-        for user in tqdm(self.project.team, desc="Downloading User thumbnails"):
+        for user in tqdm(self.project.team, desc="Downloading User thumbnails", ascii=' >='):
             user.download_and_assign_thumbnail(
                 self.destination_path,
                 path=path,
@@ -97,7 +103,13 @@ class ProjectWriter:
     def download_edit(self, requests_headers: Optional[Dict] = None, force=False):
         in_project_path = f"data/projects/{self.project.id}/edit.mp4"
         dst = self.destination_path / in_project_path
-        models.fetch_and_save_media(self.edit.sourceName, requests_headers, dst, force)
+        models.fetch_and_save_media(
+            self.edit.sourceName,
+            requests_headers,
+            dst,
+            force=force,
+            display_progress=True,
+        )
         self.edit.sourceName = str(in_project_path)
         self.edit.totalFrames = ffprobe.get_frames_count(dst)
 
