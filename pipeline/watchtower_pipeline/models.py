@@ -17,10 +17,11 @@ logging.basicConfig(
 
 
 def fetch_and_save_media(src_url, headers, dst: pathlib.Path, force=False, display_progress=False):
-    if not dst.is_file() or force:
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        r_file = requests.get(src_url, headers=headers, allow_redirects=True)
-        dst.write_bytes(r_file.content)
+    if dst.is_file() and not force:
+        return
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    r_file = requests.get(src_url, headers=headers, allow_redirects=True)
+    dst.write_bytes(r_file.content)
 
 
 class StaticPreviewMixin:
