@@ -16,6 +16,13 @@ logging.basicConfig(
 )
 
 
+def fetch_and_save_media(src_url, headers, dst: pathlib.Path, force=False, display_progress=False):
+    if not dst.is_file() or force:
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        r_file = requests.get(src_url, headers=headers, allow_redirects=True)
+        dst.write_bytes(r_file.content)
+
+
 class StaticPreviewMixin:
 
     thumbnailUrl = None
@@ -37,13 +44,6 @@ class StaticPreviewMixin:
         """
         filename = f'{file_id}.png'
         return pathlib.Path('data') / path / file_id[:2] / filename
-
-    @staticmethod
-    def fetch_and_save_media(src_url, headers, dst: pathlib.Path, force=False):
-        if not dst.is_file() or force:
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            r_file = requests.get(src_url, headers=headers, allow_redirects=True)
-            dst.write_bytes(r_file.content)
 
     def download_and_assign_thumbnail(
         self,
@@ -69,8 +69,8 @@ class StaticPreviewMixin:
         if not path:
             path = pathlib.Path('')
         dst_url = self.generate_preview_file_path(self.hash_filename(src_url), path)
-        dst = base_path / 'public' / dst_url
-        self.fetch_and_save_media(src_url, requests_headers, dst, force=force)
+        dst = base_path / dst_url
+        fetch_and_save_media(src_url, requests_headers, dst, force=force)
         setattr(self, 'thumbnailUrl', str(dst_url))
 
 
@@ -240,9 +240,9 @@ class Edit:
     """The complete cut of the project."""
 
     project: Project
-    totalFrames: int
     frameOffset: int
     sourceName: Optional[str] = None
+    totalFrames: int = 0
     sourceType: str = 'video/mp4'
 
     def __post_init__(self):

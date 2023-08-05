@@ -337,11 +337,8 @@ class KitsuWriter(writers.AbstractWriter):
             latest_preview = preview_list[0]
             break
 
-        dst = models.BASE_PATH / f"public/data/projects/{project.id}/edit.mp4"
-        models.StaticPreviewMixin.fetch_and_save_media(
-            f"{self.kitsu_client.base_url}/movies/low/preview-files/{latest_preview['id']}.mp4",
-            headers=self.kitsu_client.headers,
-            dst=dst,
+        source_name = (
+            f"{self.kitsu_client.base_url}/movies/low/preview-files/{latest_preview['id']}.mp4"
         )
 
         # Set frame offset from metadata
@@ -354,8 +351,8 @@ class KitsuWriter(writers.AbstractWriter):
 
         return models.Edit(
             project=project,
-            totalFrames=ffprobe.get_frames_count(dst),
             frameOffset=frame_offset,
+            sourceName=source_name,
         )
 
     def __init__(self):
@@ -365,6 +362,7 @@ class KitsuWriter(writers.AbstractWriter):
     def write_project(self, project_id, destination_path):
         project_writer = self._get_project_writer(project_id, destination_path)
         project_writer.download_previews(self.request_headers)
+        project_writer.download_edit(self.request_headers)
         project_writer.write_as_json()
 
 
@@ -374,9 +372,9 @@ def main(args):
 
     kitsu_writer = KitsuWriter()
 
-    if parsed_args.projects:
-        for a in parsed_args.projects:
-            kitsu_writer.write_project(a, destination_path)
+    if parsed_args.project_ids:
+        for project_id in parsed_args.project_ids:
+            kitsu_writer.write_project(project_id, destination_path)
     else:
         kitsu_writer.write(destination_path)
         if parsed_args.bundle:

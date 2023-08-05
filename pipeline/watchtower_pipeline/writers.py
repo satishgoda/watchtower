@@ -8,7 +8,7 @@ from dataclasses import dataclass, asdict
 from tqdm import tqdm
 from typing import Dict, List, Optional
 
-from watchtower_pipeline import models
+from watchtower_pipeline import models, ffprobe
 
 
 @dataclass
@@ -94,6 +94,13 @@ class ProjectWriter:
                 force=force,
             )
 
+    def download_edit(self, requests_headers: Optional[Dict] = None, force=False):
+        in_project_path = f"data/projects/{self.project.id}/edit.mp4"
+        dst = self.destination_path / in_project_path
+        models.fetch_and_save_media(self.edit.sourceName, requests_headers, dst, force)
+        self.edit.sourceName = str(in_project_path)
+        self.edit.totalFrames = ffprobe.get_frames_count(dst)
+
     def write_as_json(self):
         self.dump_data('project', asdict(self.project))
         self.dump_data('edit', self.edit.to_dict())
@@ -136,7 +143,7 @@ class AbstractProjectWriter(ABC):
 
     def _get_project_writer(self, project_id, destination_path: pathlib.Path):
         project = self.get_project(project_id)
-        sequences = self.get_project_sequences(project_id)
+        sequences = self.get_project_sequences(project)
         shots = self.get_project_shots(project)
         assets = self.get_project_assets(project)
         casting = self.get_project_casting(project, sequences, shots, assets)
