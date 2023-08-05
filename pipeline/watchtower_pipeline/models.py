@@ -39,7 +39,7 @@ def fetch_and_save_media(src_url, headers, dst: pathlib.Path, force=False, displ
             progress_bar.update(len(data))
             file.write(data)
     progress_bar.close()
-    if total_size_in_bytes != 0 and progress_bar.n != total_size_in_bytes:
+    if display_progress and total_size_in_bytes != 0 and progress_bar.n != total_size_in_bytes:
         logging.error(f"Error downloading {src_url}")
 
 
