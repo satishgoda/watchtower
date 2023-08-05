@@ -3,6 +3,7 @@ import logging
 import pathlib
 import requests
 from urllib.parse import urlparse
+from tqdm import tqdm
 import sys
 import uuid
 from dataclasses import dataclass, asdict, field
@@ -19,9 +20,27 @@ logging.basicConfig(
 def fetch_and_save_media(src_url, headers, dst: pathlib.Path, force=False, display_progress=False):
     if dst.is_file() and not force:
         return
+    response = requests.get(src_url, headers=headers, stream=True)
+    total_size_in_bytes = int(response.headers.get('content-length', 0))
+    block_size = 1024  # 1 Kibibyte
+    # Set a variable that semantically matches tqdm API (the inverse of what we want our API to do)
+    disable_progress = not display_progress
+    progress_bar = tqdm(
+        desc='Downloading edit',
+        total=total_size_in_bytes,
+        unit='iB',
+        unit_scale=True,
+        disable=disable_progress,
+        ascii=' >=',
+    )
     dst.parent.mkdir(parents=True, exist_ok=True)
-    r_file = requests.get(src_url, headers=headers, allow_redirects=True)
-    dst.write_bytes(r_file.content)
+    with open(dst, 'wb') as file:
+        for data in response.iter_content(block_size):
+            progress_bar.update(len(data))
+            file.write(data)
+    progress_bar.close()
+    if total_size_in_bytes != 0 and progress_bar.n != total_size_in_bytes:
+        logging.error(f"Error downloading {src_url}")
 
 
 class StaticPreviewMixin:
