@@ -11,16 +11,16 @@
     .section-inspector
       section.inspector-videoplayer
         .player-header
-          .toolbar-item(v-if="projectStore.currentSequence" title="Current Sequence")
+          .toolbar-item(v-if="runtimeState.currentSequence" title="Current Sequence")
             span.current-sequence-indicator(
-              :style="uiCurrentSequenceColor(projectStore.currentSequence.color)"
+              :style="uiCurrentSequenceColor(runtimeState.currentSequence.color)"
               )
-            | {{ projectStore.currentSequence.name }}
-            span(v-if="projectStore.currentShot")
+            | {{ runtimeState.currentSequence.name }}
+            span(v-if="runtimeState.currentShot")
               span.breadcrumb-separator |
-              | {{ projectStore.currentShot.name }}
+              | {{ runtimeState.currentShot.name }}
           .toolbar-item.right(title="Frame Number")
-            | {{ projectStore.currentFrame }}
+            | {{ runtimeState.currentFrame }}
         VideoPlayer(
           @set-current-frame="setCurrentFrame"
           @set-is-playing="setIsPlaying"
@@ -128,7 +128,7 @@ function handleHotkey(event: KeyboardEvent) {
 onMounted(() => {document.body.addEventListener('keydown', handleHotkey);})
 onBeforeUnmount(() => {document.body.removeEventListener('keydown', handleHotkey);})
 
-function uiCurrentSequenceColor(color: [number, number, number]) {
+function uiCurrentSequenceColor(color: [number, number, number, number]) {
   let [r, g, b] = color;
   r = r * 100;
   g = g * 100;
