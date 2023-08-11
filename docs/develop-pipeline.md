@@ -23,12 +23,12 @@ This is how those blocks can be used:
 - `kitsu.py`: Fetch data from Kitsu (this is the setup used at Blender Studio)
 
 ## Developing a custom connector
-The fastest way to develop a custom connector is to create `{connector_name}.py` in the
-`watchtower_pipeline` directory and modify `example.py` to suit your needs.
+Create a new file `{connector_name}.py` in the `watchtower_pipeline` directory
+based on `example.py` to suit your needs.
 
 
 ## JSON files data source
-Watchtower runs as static web application, and use JSON file as data source.
+Watchtower runs as static web application, and uses JSON files as data source.
 Here is how such data should be structured:
 
 ```

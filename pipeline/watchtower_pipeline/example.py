@@ -33,7 +33,8 @@ class ExampleWriter(writers.AbstractWriter):
         ]
 
     def get_project(self, project_id) -> models.Project:
-        """Generate synthetic project data and write it to a path."""
+        """Generate synthetic project data."""
+
         # Create Users
         users_list = []
         for i in range(10):
@@ -46,6 +47,7 @@ class ExampleWriter(writers.AbstractWriter):
             asset_type = models.AssetType(name=n)
             asset_types_list.append(asset_type)
 
+        # Create Task Types for Assets
         task_types_list = []
         for n, c in [
             ('Concept', '#8D6E63'),
@@ -59,6 +61,7 @@ class ExampleWriter(writers.AbstractWriter):
                 for_shots=False,
             )
             task_types_list.append(task_type)
+        # Create Task Types for Shots
         for n, c in [
             ('Storyboard', '#43A047'),
             ('Layout', '#7CB342'),
@@ -72,6 +75,7 @@ class ExampleWriter(writers.AbstractWriter):
             )
             task_types_list.append(task_type)
 
+        # Create Task Statuses
         task_statuses_list = []
         for n, c in [
             ('Todo', '#f5f5f5'),
@@ -81,6 +85,7 @@ class ExampleWriter(writers.AbstractWriter):
             task_status = models.TaskStatus(id=None, name=n, color=c)
             task_statuses_list.append(task_status)
 
+        # Create Project Snapshot data
         return models.Project(
             id=project_id,
             name='Example Project',

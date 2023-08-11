@@ -20,6 +20,8 @@ For Vue, install [Volar](https://marketplace.visualstudio.com/items?itemName=Vue
 extensions in [Takeover Mode](https://vuejs.org/guide/typescript/overview.html#volar-takeover-mode).  
 *Note: in VSCodium the Vue TS extension is called: `johnsoncodehk.vscode-typescript-vue-plugin`*
 
+Ensure that the IDE is using the project's TS version and says `(takeover)` in the status bar at the bottom.
+
 Install [ESLint](https://marketplace.visualstudio.com/items?itemName=Vdbaeumer.vscode-eslint)
 to show warnings from the ESLint yarn installed package directly in the IDE.
 

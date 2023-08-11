@@ -4,8 +4,8 @@ outline: [2,3]
 # Pipeline Integration
 
 To use Watchtower with your data, you need to write a script (we will call it 'writer') that
-fetches it from your production tracker. This can be done by leveraging the`watchtower_pipeline`
-library.
+fetches the data from your production tracker. This can be done by leveraging the
+`watchtower_pipeline` Python library.
 
 The goal is to generate the following set of JSON files:
 
