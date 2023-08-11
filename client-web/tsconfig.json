@@ -1,6 +1,8 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["env.d.ts", "./src/**/*", "./src/**/*.vue"],
+
+  "include": ["src/**/*.ts", "src/**/*.vue"],
+
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
@@ -12,11 +14,11 @@
 
     /* Modules */
     "isolatedModules": true, // For compatibility with Vite's HMR.
+    "types": ["vite/client"],
 
-    /* Emit */
-    "declarationDir": "./src/types",
-    "declaration": true,
-    "declarationMap": true,
+    /* Emit Types */
+    "declaration": false,
+    "declarationMap": false,
 
     /* Type Checking */
     "strict": true,
@@ -27,5 +29,11 @@
     "noPropertyAccessFromIndexSignature": true,
     "noUnusedLocals": false,
     "noUnusedParameters": true
+  },
+
+  "vueCompilerOptions": {
+    "plugins": [
+      "@vue/language-plugin-pug"
+    ]
   }
 }

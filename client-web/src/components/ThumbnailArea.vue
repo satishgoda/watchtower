@@ -65,8 +65,8 @@ const canvasThumbGrid = ref(null)
 const canvasThumbGridText = ref(null)
 
 const emit = defineEmits<{
-  (event: 'setCurrentFrame', frameNumber: number): void
-  (event: 'setSelectedAssets', assets: Asset[]): void
+  setCurrentFrame: [frameNumber: number]
+  setSelectedAssets: [assets: Asset[]]
 }>()
 
 const props = defineProps<{
@@ -244,7 +244,7 @@ function draw() {
   }
 
   // Draw the thumbnails.
-  const imgBundle = ((data.mode === 'shots') ? data.shotsTexBundleID : data.assetsTexBundleID) as WebGLTexture;
+  const imgBundle = (data.mode === 'shots') ? data.shotsTexBundleID : data.assetsTexBundleID;
   for (const thumb of data.thumbnails) {
     ui.addImageFromBundle(thumb.pos[0], thumb.pos[1], thumbSize[0], thumbSize[1], imgBundle, thumb.objIdx);
   }
@@ -368,7 +368,7 @@ function draw() {
                     ui.addImageFromBundle(
                       thumb.pos[0] + offsetW - aIdx * stepX, thumb.pos[1] + offsetH,
                       avatarSize, avatarSize,
-                      data.usersTexBundleID!, i, avatarSize * 0.5
+                      data.usersTexBundleID, i, avatarSize * 0.5
                     );
                     break;
                   }

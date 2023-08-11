@@ -11,7 +11,6 @@
     "README.md",
     "../LICENSE"
   ],
-  "types": "./src/types/index.d.ts",
 
   "scripts": {
     "dev": "vite",
@@ -19,34 +18,36 @@
     "preview": "vite preview --port 4173",
     "build-only": "vite build",
     "type-check": "vue-tsc --noEmit",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "lint": "eslint .",
     "build-for-py": "vite build --emptyOutDir --outDir ../pipeline/dist_client_web"
   },
 
   "dependencies": {
     "axios": "^1.1.2",
-    "pug": "^3.0.2",
-    "uirenderer-canvas": "1.0.7-beta.6",
+    "pug": "3.0.2",
+    "uirenderer-canvas": "1.1.1",
     "video.js": "^7.20.3",
-    "vue": "^3.3.4",
-    "vue-router": "^4.1.3"
+    "vue": "3.3.4",
+    "vue-router": "4.2.4"
   },
   "devDependencies": {
     "typescript": "5.1.6",
-    "@typescript-eslint/parser": "6.2.1",
-    "@typescript-eslint/eslint-plugin": "6.2.1",
+    "@typescript-eslint/parser": "6.3.0",
+    "@typescript-eslint/eslint-plugin": "6.3.0",
     "eslint": "8.46.0",
-    "vite": "4.4.8",
+    "vite": "4.4.9",
     "vite-plugin-glsl": "1.1.2",
     "@vue/eslint-config-typescript": "11.0.3",
     "@vue/language-plugin-pug": "1.8.8",
     "@vue/tsconfig": "0.4.0",
     "@vitejs/plugin-vue": "4.2.3",
-    "eslint-plugin-vue": "9.16.1",
+    "eslint-plugin-vue": "9.17.0",
+    "eslint-plugin-vue-pug": "0.6.0",
+    "vue-eslint-parser": "9.3.1",
     "vue-tsc": "1.8.8",
     "npm-run-all": "^4.1.5",
-    "@rushstack/eslint-patch": "^1.1.4",
-    "@types/node": "^16.11.47",
+    "@rushstack/eslint-patch": "1.3.3",
+    "@types/node": "20.4.9",
     "@types/video.js": "^7.3.51"
   }
 }

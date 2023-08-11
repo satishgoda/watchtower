@@ -33,8 +33,8 @@ import { RuntimeState } from '@/stores/runtimeState';
 import { reactive, ref, computed, watch, onMounted, onUnmounted } from 'vue';
 
 const emit = defineEmits<{
-  (event: 'setCurrentFrame', frameNumber: number): void
-  (event: 'setTimelineCanvasHeightPx', height: number): void
+  setCurrentFrame: [frameNumber: number]
+  setTimelineCanvasHeightPx: [height: number]
 }>()
 
 const props = defineProps<{
@@ -169,7 +169,7 @@ function resizeCanvas(shouldDraw=true) {
   const margin = uiConfig.margin;
   const timelineX = margin.x + data.channelNamesWidth + uiConfig.timeline.padX;
   data.timelineRange.x = timelineX;
-  data.timelineRange.w = data.canvas!.width - timelineX - margin.x;
+  data.timelineRange.w = data.canvas.width - timelineX - margin.x;
 
   // Update the view window to show the same frame range as before the resize.
   data.timelineView.x = data.timelineRange.x + offset;
@@ -557,7 +557,6 @@ function onMouseEvent(event: MouseEvent) {
   if (data.isMouseDragging.MMB
       && (event.type === 'mousemove' || event.type === 'mouseup')) {
     const mouse = clientToCanvasCoords(event);
-    if (!data.gesture.initialMouseCoords || !data.gesture.initialViewRect) {return}
     panTimelineView(mouse.x - data.gesture.initialMouseCoords.x, data.gesture.initialViewRect.x);
     //console.log(mouse, event.movementX, event.movementY, this.mmbxy.x - mouse.x);
   }

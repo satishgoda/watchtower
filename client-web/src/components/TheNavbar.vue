@@ -30,11 +30,11 @@ const router = useRouter();
 const currentProjectSelected = ref();
 const props = defineProps<{
   projects: ProjectListItem[],
-  activeProjectId: '',
+  activeProjectId: "",
 }>()
 
 const emit = defineEmits<{
-  (event: 'setActiveProjectId', projectId: string): void
+  setActiveProjectId: [projectId: string]
 }>()
 
 

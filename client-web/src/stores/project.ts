@@ -52,8 +52,7 @@ export class useProjectStore {
       // If the project has any user referenced (as list of IDs)
       if (projectTeam.length > 0) {
         const processedUsers = [];
-        for (let i = 0; i < projectTeam.length; i++) {
-          const filteredUser = projectTeam[i];
+        for (const filteredUser of projectTeam) {
           // Build a processed user
           // TODO: Use the existing User type, not ProcessedUser
           const user: ProcessedUser = {

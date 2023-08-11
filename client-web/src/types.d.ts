@@ -3,12 +3,12 @@ import type { vec4 } from 'uirenderer-canvas';
 type Task = {
   task_status_id: string;
   task_type_id: string;
-  assignees: Array<string>;
-  id: string
+  assignees: string[];
+  id: string;
 }
 
 type Shot = {
-  asset_ids: Array<string>;
+  asset_ids: string[];
   startFrame: number;
   data: object;
   durationSeconds: number;
@@ -16,7 +16,7 @@ type Shot = {
   id: string;
   name: string;
   sequence_id: string;
-  tasks: Array<Task>;
+  tasks: Task[];
   thumbnailUrl: string;
 };
 
@@ -29,10 +29,10 @@ type Sequence = {
 type Asset = {
   name: string;
   asset_type_id: string;
-  tasks: Array<Task>;
+  tasks: Task[];
   id: string;
   thumbnailUrl: string;
-  shot_ids: Array<string>
+  shot_ids: Astring[];
 }
 
 type TaskType = {
@@ -70,7 +70,7 @@ type ProcessedUser = {
 
 type ShotCasting = {
   shot_id: string;
-  asset_ids: Array<string>;
+  asset_ids: string[];
 }
 
 type VideoPlayerSource = {

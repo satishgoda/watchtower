@@ -24,24 +24,25 @@ const paletteDefault = [
 
 export default {
   paletteDefault,
+
   hexToRGB (hex: string) {
-  const r: number = parseInt(hex.slice(1, 3), 16) / 255,
-        g: number = parseInt(hex.slice(3, 5), 16) / 255,
-        b: number = parseInt(hex.slice(5, 7), 16) / 255;
-  return [r, g, b, 1.0]
+    const r: number = parseInt(hex.slice(1, 3), 16) / 255,
+          g: number = parseInt(hex.slice(3, 5), 16) / 255,
+          b: number = parseInt(hex.slice(5, 7), 16) / 255;
+    return [r, g, b, 1.0]
   },
+
   batchConvertColorHexToRGB (items: any) {
     /* Given a list of objects, convert the object attribute to RGB */
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
+    for (const item of items) {
       item.color = this.hexToRGB(item.color);
     }
   },
+
   batchAssignColor (items: any) {
     /* Given a list of objects, assign a sequential color from the default palette */
     let colorPaletteIndex = 0;
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
+    for (const item of items) {
       item.color = this.paletteDefault[colorPaletteIndex];
       // Loop through the color palette if we reach the end
       // We use +2 to skip the last color of the palette (Grey)
