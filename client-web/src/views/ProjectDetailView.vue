@@ -41,6 +41,7 @@
 
       TimelineArea(
         @set-current-frame="setCurrentFrame"
+        @set-timeline-visible-frames="setTimelineVisibleFrames"
         @set-timeline-canvas-height-px="setTimelineCanvasHeightPx"
         :runtime-state="runtimeState"
         :project-store="projectStore.data"
@@ -78,6 +79,7 @@ emit('setActiveProjectId', projectId)
 // Runtime state
 const runtimeState = reactive(new RuntimeState());
 
+
 function setCurrentFrame(frameNumber: string|number) {
   // Force frameNumber to be int. Since it comes from JSON metadata it could have
   // accidentally been stored as a string. This is due to weak schema validation on Kitsu.
@@ -107,8 +109,12 @@ function setCurrentFrame(frameNumber: string|number) {
   runtimeState.currentSequence = currSequence;
 }
 
-function setSelectedAssets(assets: [Asset]) {
+function setSelectedAssets(assets: Asset[]) {
   runtimeState.selectedAssets = assets;
+}
+
+function setTimelineVisibleFrames(frameRange: [number, number]) {
+  runtimeState.timelineVisibleFrames = frameRange;
 }
 
 function setIsPlaying(isPlaying: boolean) {
@@ -118,6 +124,7 @@ function setIsPlaying(isPlaying: boolean) {
 function setTimelineCanvasHeightPx(height: number) {
   runtimeState.timelineCanvasHeightPx = height;
 }
+
 
 function handleHotkey(event: KeyboardEvent) {
   if (event.code === 'Space') {

@@ -3,7 +3,7 @@
   .toolbar
     .toolbar-item
       span
-        input#showTasksStatus(type="checkbox" v-model="props.runtimeState.isShowingTimelineTasks")
+        input#showTasksStatus(type="checkbox" v-model="data.showTasksStatus")
         label(for="showTasksStatus") Show Tasks Status
       span(v-if="props.runtimeState.selectedAssets.length")
         input#showSelectedAssets(type="checkbox" v-model="data.showSelectedAssets")
@@ -34,6 +34,7 @@ import { reactive, ref, computed, watch, onMounted, onUnmounted } from 'vue';
 
 const emit = defineEmits<{
   setCurrentFrame: [frameNumber: number]
+  setTimelineVisibleFrames: [frameRange: [number, number]]
   setTimelineCanvasHeightPx: [height: number]
 }>()
 
@@ -149,7 +150,7 @@ function resizeCanvas(shouldDraw=true) {
   if (!data.canvas || !data.canvasText || !canvasContainer) {return}
   let numChannels = 0;
   if (data.showSelectedAssets) { numChannels += props.runtimeState.selectedAssets.length; }
-  if (props.runtimeState.isShowingTimelineTasks) { numChannels += taskTypesForShots.value.length; }
+  if (data.showTasksStatus) { numChannels += taskTypesForShots.value.length; }
   data.canvas.width = canvasContainer.offsetWidth;
   data.canvas.height = uiConfig.margin.top
       + uiConfig.sequences.channelHeight
@@ -308,7 +309,7 @@ function draw() {
   }
 
   // Draw task statuses.
-  if (props.runtimeState.isShowingTimelineTasks) {
+  if (data.showTasksStatus) {
     for (const taskType of taskTypesForShots.value) { // e.g. "Animation"
       for (const status of props.projectStore.taskStatuses) { // e.g. "Done"
         // Get the contiguous frame ranges for this task status.
@@ -428,7 +429,7 @@ function draw() {
       textY += channelStep;
     }
   }
-  if (props.runtimeState.isShowingTimelineTasks) {
+  if (data.showTasksStatus) {
     for (const task of taskTypesForShots.value) {
       ui2D.fillText(task.name, textX, textY);
       textY += channelStep;
@@ -489,7 +490,7 @@ function findShotForCurrentFrame() {
 function onVisibleFrameRangeUpdated() {
   const startFrame = pxToFrame(data.timelineRange.x);
   const endFrame = pxToFrame(data.timelineRange.x + data.timelineRange.w);
-  props.runtimeState.timelineVisibleFrames = [startFrame, endFrame];
+  emit('setTimelineVisibleFrames', [startFrame, endFrame]);
 
   draw();
 }
@@ -604,7 +605,7 @@ function onKeyDown(event: KeyboardEvent) {
 
 // Watchers
 
-watch(() => props.runtimeState.isShowingTimelineTasks, onChannelsUpdated)
+watch(() => data.showTasksStatus, onChannelsUpdated)
 watch(() => data.showSelectedAssets, onChannelsUpdated)
 watch(() => props.projectStore.taskTypes, onChannelsUpdated)
 watch(() => props.projectStore.taskStatuses, draw)
