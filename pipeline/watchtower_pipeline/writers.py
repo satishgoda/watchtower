@@ -28,7 +28,10 @@ class ProjectListWriter:
         # Set a variable that semantically matches tqdm API (the inverse of what we want our API to do)
         disable_progress = not display_progress
         for p in tqdm(
-            self.projects, desc="Downloading Project thumbnails", disable=disable_progress
+            self.projects,
+            desc="Downloading Project thumbnails",
+            disable=disable_progress,
+            ascii=' >=',
         ):
             path = pathlib.Path('projects-list') / 'previews'
             p.download_and_assign_thumbnail(
@@ -185,6 +188,7 @@ class AbstractWriter(AbstractProjectListWriter, AbstractProjectWriter, ABC):
         for p in project_list_writer.projects:
             project_writer = self._get_project_writer(p.id, destination_path)
             project_writer.download_previews(self.request_headers)
+            project_writer.download_edit(self.request_headers)
             project_writer.write_as_json()
 
 
