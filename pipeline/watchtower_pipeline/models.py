@@ -44,7 +44,6 @@ def fetch_and_save_media(src_url, headers, dst: pathlib.Path, force=False, displ
 
 
 class StaticPreviewMixin:
-
     thumbnailUrl = None
 
     @staticmethod
@@ -154,29 +153,6 @@ class User(StaticPreviewMixin, IdMixin):
 
 
 @dataclass
-class Project(StaticPreviewMixin, IdMixin):
-    """A film, short film, etc."""
-
-    ratio: str
-    resolution: str
-    asset_types: List[AssetType] = field(default_factory=list)
-    task_types: List[TaskType] = field(default_factory=list)
-    task_statuses: List[TaskStatus] = field(default_factory=list)
-    team: List[User] = field(default_factory=list)
-    id: Optional[str] = None
-    thumbnailUrl: Optional[str] = None
-    fps: float = 24
-
-
-@dataclass
-class ProjectListItem(StaticPreviewMixin, IdMixin):
-    """Used to build the dataset managed via projects.ts"""
-
-    id: Optional[str] = None
-    thumbnailUrl: Optional[str] = None
-
-
-@dataclass
 class JsonMixin:
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -247,6 +223,8 @@ class ShotCasting:
     assets: List[Asset] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
+        if not self.shot:
+            return {}
         return {'shot_id': self.shot.id, 'asset_ids': [a.id for a in self.assets]}
 
 
@@ -256,18 +234,20 @@ class Sequence(IdMixin):
 
 
 @dataclass
-class Edit:
+class Edit(IdMixin):
     """The complete cut of the project."""
 
-    project: Project
+    project_id: str
     frameOffset: int
+    id: Optional[str] = None
+    episode_id: Optional[str] = None
     sourceName: Optional[str] = None
     totalFrames: int = 0
     sourceType: str = 'video/mp4'
 
     def __post_init__(self):
         if not self.sourceName:
-            self.sourceName = f"data/projects/{self.project.id}/edit.mp4"
+            self.sourceName = f"data/projects/{self.project_id}/edit-{self.id}.mp4"
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -275,4 +255,45 @@ class Edit:
             'frameOffset': self.frameOffset,
             'sourceName': self.sourceName,
             'sourceType': self.sourceType,
+            'episodeId': self.episode_id,
+            'id': self.id,
         }
+
+
+@dataclass
+class Episode(IdMixin):
+    sequences: List[Sequence] = field(default_factory=list)
+    # edit: Edit = None
+    id: Optional[str] = None
+
+
+@dataclass
+class EpisodeListItem(IdMixin):
+    """Used only to build the dataset managed via projects.ts"""
+
+    id: Optional[str] = None
+
+
+@dataclass
+class ProjectListItem(StaticPreviewMixin, IdMixin):
+    """Used to build the dataset managed via projects.ts"""
+
+    id: Optional[str] = None
+    thumbnailUrl: Optional[str] = None
+    episodes: List[EpisodeListItem] = field(default_factory=list)
+
+
+@dataclass
+class Project(StaticPreviewMixin, IdMixin):
+    """A film, short film, etc."""
+
+    ratio: str
+    resolution: str
+    asset_types: List[AssetType] = field(default_factory=list)
+    task_types: List[TaskType] = field(default_factory=list)
+    task_statuses: List[TaskStatus] = field(default_factory=list)
+    team: List[User] = field(default_factory=list)
+    id: Optional[str] = None
+    thumbnailUrl: Optional[str] = None
+    fps: float = 24
+    episodes: List[Episode] = field(default_factory=list)

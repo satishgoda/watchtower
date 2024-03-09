@@ -56,7 +56,7 @@ import {onMounted, onBeforeUnmount, computed, reactive, watch} from 'vue';
 import { useRoute } from 'vue-router';
 import { useProjectStore } from '@/stores/project';
 import { RuntimeState } from '@/stores/runtimeState';
-import type { Asset } from '@/types.d.ts';
+import type {Asset, Episode} from '@/types.d.ts';
 import ThumbnailArea from '@/components/ThumbnailArea.vue';
 import VideoPlayer from '@/components/VideoPlayer.vue';
 import TimelineArea from '@/components/TimelineArea.vue';
@@ -71,7 +71,8 @@ const emit = defineEmits<{
 }>()
 
 const props = defineProps<{
-  activeProjectId: string
+  activeProjectId: string;
+  activeEpisodeId: string;
 }>()
 
 emit('setActiveProjectId', projectId)
@@ -79,6 +80,9 @@ emit('setActiveProjectId', projectId)
 // Runtime state
 const runtimeState = reactive(new RuntimeState());
 
+function setSelectedEpisode(episode: Episode) {
+  runtimeState.selectedEpisode = episode;
+}
 
 function setCurrentFrame(frameNumber: string|number) {
   // Force frameNumber to be int. Since it comes from JSON metadata it could have
@@ -125,7 +129,6 @@ function setTimelineCanvasHeightPx(height: number) {
   runtimeState.timelineCanvasHeightPx = height;
 }
 
-
 function handleHotkey(event: KeyboardEvent) {
   if (event.code === 'Space') {
     runtimeState.isPlaying = !runtimeState.isPlaying;
@@ -153,6 +156,7 @@ const cssTimelineHeight = computed(() => {
 
 // Watchers
 watch(() => props.activeProjectId, (projectId) => {projectStore.initWithProject(projectId)})
+watch(() => props.activeEpisodeId, (episodeId) => {projectStore.initWithEpisode(episodeId)})
 
 </script>
 

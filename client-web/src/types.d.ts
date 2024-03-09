@@ -78,8 +78,29 @@ type VideoPlayerSource = {
   type: string;
 }
 
+type EpisodeListItem = {
+  name: string;
+  id: string;
+}
+
 type ProjectListItem = {
   name: string;
   id: string;
   thumbnailUrl: string;
+  episodes: EpisodeListItem[];
+}
+
+type Episode = {
+  name: string;
+  id: string;
+  sequences: Sequence[];
+}
+
+type Edit = {
+  id: string;
+  totalFrames: number;
+  frameOffset: number;
+  sourceName: string;
+  sourceType: string;
+  episodeId: string;
 }

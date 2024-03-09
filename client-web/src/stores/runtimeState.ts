@@ -1,4 +1,4 @@
-import type { Asset, Sequence, Shot } from '@/types.d.ts';
+import type { Asset, Sequence, Shot, Episode } from '@/types.d.ts';
 
 export class RuntimeState {
   isPlaying = false;
@@ -7,6 +7,7 @@ export class RuntimeState {
   currentSequence = null as Sequence | null;
   currentShot = null as Shot | null;
   selectedAssets = new Array<Asset>();
+  selectedEpisode = null as Episode | null;
   // Runtime UI settings
   timelineCanvasHeightPx = 0;
 }

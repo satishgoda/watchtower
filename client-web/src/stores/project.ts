@@ -1,8 +1,8 @@
-import { reactive } from 'vue';
+import {reactive} from 'vue';
 import axios from 'axios';
 import dataUrls from '@/lib/dataurls';
 import colors from '@/lib/colors';
-import type { Asset, AssetType, TaskType, TaskStatus, ProcessedUser, Sequence, Shot, ShotCasting, VideoPlayerSource } from '@/types.d.ts';
+import type { Asset, AssetType, TaskType, TaskStatus, ProcessedUser, Sequence, Shot, ShotCasting, VideoPlayerSource, Episode, Edit } from '@/types.d.ts';
 
 const basePath = import.meta.env.BASE_URL;
 
@@ -23,12 +23,19 @@ export class DataProjectStore {
   frameOffset = 0;
   fps = 24;
   videoPlayerSources: VideoPlayerSource[] = [];
+  episodes: Episode[] = [];
 }
 
 
 export class useProjectStore {
   data = reactive(new DataProjectStore());
 
+  getEpisodeSequences(episodeId: string): Sequence[] {
+    // Look for episode, considering that ID might not be found, or that data.episodes is empty
+    const episode: Episode | undefined = this.data.episodes.find(episode => episode.id === episodeId);
+    if (!episode) {return []}
+    return episode.sequences;
+  }
   async fetchProjectData(projectId: string) {
     try {
 
@@ -69,35 +76,61 @@ export class useProjectStore {
         colors.batchAssignColor(processedUsers);
         this.data.team = processedUsers;
       }
-
-    } catch (error) {
-      console.log(error)
-    }
-  }
-  async fetchProjectSequences(projectId: string) {
-    try {
-      const response = await axios.get(dataUrls.getUrl(dataUrls.urlType.Sequences, projectId));
-      // Setup data for Sequences.
-      for (let i = 0; i < response.data.length; i++) {
-        const seq = response.data[i];
-        seq.color = colors.paletteDefault[i];
+      // If project has episodes
+      if (response.data.episodes.length > 0) {
+        this.data.episodes = response.data.episodes;
       }
-      this.data.sequences = response.data;
 
-      // Perform asset casting
-      // for (let i = 0; i < this.data.sequences.length; i++) {
-      //   const seq = response.data[i];
-      //   await this.data.fetchSequenceCasting(projectId, seq.id)
-      // }
     } catch (error) {
       console.log(error)
     }
   }
-  async fetchProjectShots(projectId: string) {
+  async fetchProjectSequences(projectId: string, episodeId?: string) {
     try {
-      const response = await axios.get(dataUrls.getUrl(dataUrls.urlType.Shots, projectId));
-      for (const shot of response.data) {
-        if (shot.thumbnailUrl === null) {
+      const url = dataUrls.getUrl(dataUrls.urlType.Sequences, projectId);
+      const response = await axios.get(url);
+
+      const sequences: Sequence[] = response.data;
+      let sequencesFiltered: Sequence[] = response.data;
+
+      // Filter sequences, based on episode
+      if (episodeId) {
+        const sequencesFilter: Sequence[] = this.getEpisodeSequences(episodeId);
+        sequencesFiltered = sequences.filter(sequence => {
+          // Check if the sequence's id is present in sequences_filter
+          return sequencesFilter.some(filter => filter.id === sequence.id);
+        });
+      }
+
+      // Setup data for Sequences.
+      sequencesFiltered.forEach((seq, index) => {
+        seq.color = colors.paletteDefault[index % colors.paletteDefault.length];
+      });
+      this.data.sequences = sequencesFiltered;
+
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  async fetchProjectShots(projectId: string, episodeId?: string) {
+    try {
+      const url = dataUrls.getUrl(dataUrls.urlType.Shots, projectId);
+      const response = await axios.get(url);
+
+      const shots: Shot[] = response.data;
+      let shotsFiltered: Shot[] = response.data;
+
+      // Filter sequences, based on episode
+      if (episodeId) {
+        const sequencesFilter: Sequence[] = this.getEpisodeSequences(episodeId);
+        shotsFiltered = shots.filter(shot => {
+          // Check if the sequence's id is present in sequences_filter
+          return sequencesFilter.some(filter => filter.id === shot.sequence_id);
+        });
+      }
+
+      for (const shot of shotsFiltered) {
+        if (!shot.thumbnailUrl) {
           shot.thumbnailUrl = `${basePath}static/img/placeholder-asset.png`
         } else {
           // Prepend the base_url
@@ -106,8 +139,10 @@ export class useProjectStore {
         }
         shot.asset_ids = [];
       }
-      this.data.shots = response.data;
+
+      this.data.shots = shotsFiltered;
       this.data.shots.sort((a, b) => (a.startFrame > b.startFrame) ? 1 : -1)
+
     } catch (error) {
       console.log(error)
     }
@@ -133,15 +168,34 @@ export class useProjectStore {
       console.log(error);
     }
   }
-  async fetchEditData(projectId: string) {
-    const urlEdit = `${basePath}data/projects/${projectId}/edit.json`
-    const response = await axios.get(urlEdit);
-    this.data.totalFrames = response.data.totalFrames;
-    this.data.frameOffset = response.data.frameOffset;
+  async fetchEditData(projectId: string, episodeId?: string) {
+    const url = `${basePath}data/projects/${projectId}/edits.json`
+    const response = await axios.get(url);
+
+    const edits: Edit[] = response.data;
+    let edit: Edit = {
+      id: '',
+      totalFrames: 0,
+      sourceName: '',
+      sourceType: 'video/mp4',
+      episodeId: '',
+      frameOffset: 0,
+    }
+
+    // Filter sequences, based on episode
+    if (episodeId) {
+      const filteredEdit: Edit | undefined = edits.find(edit => edit.episodeId === episodeId);
+      if (filteredEdit != undefined) {edit = filteredEdit}
+    } else {
+      edit = edits[0];
+    }
+
+    this.data.totalFrames = edit.totalFrames;
+    this.data.frameOffset = edit.frameOffset;
     this.data.videoPlayerSources = [
       {
-        src: `${basePath}${response.data.sourceName}`,
-        type: response.data.sourceType,
+        src: `${basePath}${edit.sourceName}`,
+        type: edit.sourceType,
       }
     ]
     // this.data.setCurrentFrame(response.data.frameOffset);
@@ -177,5 +231,11 @@ export class useProjectStore {
     } catch (error) {
       console.log(error)
     }
+  }
+  async initWithEpisode(episodeId: string) {
+    if (!this.data.id) {return}
+    await this.fetchProjectSequences(this.data.id, episodeId);
+    await this.fetchProjectShots(this.data.id, episodeId);
+    await this.fetchEditData(this.data.id, episodeId);
   }
 }

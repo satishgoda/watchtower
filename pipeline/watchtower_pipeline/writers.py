@@ -13,7 +13,6 @@ from watchtower_pipeline import models, ffprobe
 
 @dataclass
 class ProjectListWriter:
-
     projects: List[models.ProjectListItem]
     destination_path: pathlib.Path
 
@@ -68,7 +67,7 @@ class ProjectWriter:
     shots: List[models.Shot]
     assets: List[models.Asset]
     sequences: List[models.Sequence]
-    edit: models.Edit
+    edits: List[models.Edit]
     casting: List[models.ShotCasting]
     destination_path: pathlib.Path
 
@@ -103,22 +102,23 @@ class ProjectWriter:
                 force=force,
             )
 
-    def download_edit(self, requests_headers: Optional[Dict] = None, force=False):
-        in_project_path = f"data/projects/{self.project.id}/edit.mp4"
-        dst = self.destination_path / in_project_path
-        models.fetch_and_save_media(
-            self.edit.sourceName,
-            requests_headers,
-            dst,
-            force=force,
-            display_progress=True,
-        )
-        self.edit.sourceName = str(in_project_path)
-        self.edit.totalFrames = ffprobe.get_frames_count(dst)
+    def download_edits(self, requests_headers: Optional[Dict] = None, force=False):
+        for edit in self.edits:
+            in_project_path = f"data/projects/{self.project.id}/edit-{edit.id}.mp4"
+            dst = self.destination_path / in_project_path
+            models.fetch_and_save_media(
+                edit.sourceName,
+                requests_headers,
+                dst,
+                force=force,
+                display_progress=True,
+            )
+            edit.sourceName = str(in_project_path)
+            edit.totalFrames = ffprobe.get_frames_count(dst)
 
     def write_as_json(self):
         self.dump_data('project', asdict(self.project))
-        self.dump_data('edit', self.edit.to_dict())
+        self.dump_data('edits', [e.to_dict() for e in self.edits])
         self.dump_data('assets', [asdict(a) for a in self.assets])
         self.dump_data('shots', [asdict(s) for s in self.shots])
         self.dump_data('sequences', [asdict(s) for s in self.sequences])
@@ -153,7 +153,7 @@ class AbstractProjectWriter(ABC):
         pass
 
     @abstractmethod
-    def get_project_edit(self, project: models.Project) -> models.Edit:
+    def get_project_edits(self, project: models.Project) -> List[models.Edit]:
         pass
 
     def _get_project_writer(self, project_id, destination_path: pathlib.Path):
@@ -162,14 +162,14 @@ class AbstractProjectWriter(ABC):
         shots = self.get_project_shots(project)
         assets = self.get_project_assets(project)
         casting = self.get_project_casting(project, sequences, shots, assets)
-        edit = self.get_project_edit(project)
+        edits = self.get_project_edits(project)
 
         return ProjectWriter(
             project=project,
             shots=shots,
             assets=assets,
             sequences=sequences,
-            edit=edit,
+            edits=edits,
             casting=casting,
             destination_path=destination_path,
         )
@@ -188,7 +188,7 @@ class AbstractWriter(AbstractProjectListWriter, AbstractProjectWriter, ABC):
         for p in project_list_writer.projects:
             project_writer = self._get_project_writer(p.id, destination_path)
             project_writer.download_previews(self.request_headers)
-            project_writer.download_edit(self.request_headers)
+            project_writer.download_edits(self.request_headers)
             project_writer.write_as_json()
 
 

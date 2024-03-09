@@ -1,6 +1,6 @@
 <template lang="pug">
 .app-toolbar
-  select.ml-4.mt-2(
+  select(
     v-if="projects"
     v-show="router.currentRoute.value.name === 'pro'"
     @change="switchToProject"
@@ -12,6 +12,17 @@
       :value="project.id"
       )
       | {{ project.name }}
+  select.episode(
+    v-if="episodes.length > 0"
+    @change="switchToEpisode"
+    v-model="currentEpisodeSelected"
+    )
+    option(
+      v-for="episode in episodes"
+      :key="episode.id"
+      :value="episode.id"
+      )
+      | {{ episode.name }}
   .app-links
     ul
       li
@@ -24,26 +35,41 @@
 
 import { RouterLink, useRouter } from 'vue-router';
 import {ref, watch} from 'vue';
-import type { ProjectListItem } from '@/types.d.ts';
+import type {EpisodeListItem, ProjectListItem} from '@/types.d.ts';
 
 const router = useRouter();
 const currentProjectSelected = ref();
+const currentEpisodeSelected = ref();
 const props = defineProps<{
   projects: ProjectListItem[],
+  episodes: EpisodeListItem[],
   activeProjectId: "",
+  activeEpisodeId: "",
 }>()
 
 const emit = defineEmits<{
-  setActiveProjectId: [projectId: string]
+  setActiveProjectId: [projectId: string],
+  setActiveEpisodeId: [episodeId: string],
 }>()
 
 
-watch(() => props.activeProjectId, (projectId) => {currentProjectSelected.value = projectId})
+watch(() => props.activeProjectId, (projectId) => {
+  currentProjectSelected.value = projectId;
+})
+
+watch(() => props.activeEpisodeId, (episodeId) => {
+  currentEpisodeSelected.value = episodeId;
+})
 
 function switchToProject(event: Event) {
   const projectId = (event.target as HTMLInputElement).value;
   router.push({ name: 'pro', params: { projectId: projectId } })
   emit('setActiveProjectId', projectId);
+}
+
+function switchToEpisode(event: Event) {
+  const episodeId = (event.target as HTMLInputElement).value;
+  emit('setActiveEpisodeId', episodeId);
 }
 
 
@@ -67,5 +93,9 @@ function switchToProject(event: Event) {
 
 .app-links a {
   color: var(--text-color-hint)
+}
+
+select.episode {
+  margin-left: 5px;
 }
 </style>

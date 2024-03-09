@@ -89,7 +89,6 @@ class KitsuClient:
 
 
 class KitsuWriter(writers.AbstractWriter):
-
     kitsu_client: KitsuClient
     user_context = None
 
@@ -98,16 +97,55 @@ class KitsuWriter(writers.AbstractWriter):
         return self.kitsu_client.headers
 
     def get_project_list(self) -> List[models.ProjectListItem]:
-
-        # Projects
-        return [
-            models.ProjectListItem(
-                id=p['id'],
-                name=p['name'],
-                thumbnailUrl=f"{self.kitsu_client.base_url}/pictures/thumbnails/projects/{p['id']}.png",
+        # Project
+        projects = []
+        for project in self.user_context['projects']:
+            episodes = []
+            if project['production_type'] == 'tvshow':
+                r_episodes = self.kitsu_client.get(f"/data/projects/{project['id']}/episodes")
+                for episode in r_episodes.json():
+                    episodes.append(
+                        models.EpisodeListItem(
+                            id=episode['id'],
+                            name=episode['name'],
+                        )
+                    )
+            projects.append(
+                models.ProjectListItem(
+                    id=project['id'],
+                    name=project['name'],
+                    thumbnailUrl=f"{self.kitsu_client.base_url}/pictures/thumbnails/projects/{project['id']}.png",
+                    episodes=episodes,
+                )
             )
-            for p in self.user_context['projects']
-        ]
+        return projects
+
+    def get_episodes(self, project):
+        # Fetch episodes, if available
+        episodes = []
+        if project['production_type'] == 'tvshow':
+            r_episodes = self.kitsu_client.get(f"/data/projects/{project['id']}/episodes")
+
+            for episode in r_episodes.json():
+                sequences = []
+                r_sequences = self.kitsu_client.get(
+                    f"/data/sequences?project_id={project['id']}&episode_id={episode['id']}"
+                )
+                for sequence in r_sequences.json():
+                    sequences.append(
+                        models.Sequence(
+                            name=sequence['name'],
+                            id=sequence['id'],
+                        )
+                    )
+                episodes.append(
+                    models.Episode(
+                        sequences=sequences,
+                        id=episode['id'],
+                        name=episode['name'],
+                    )
+                )
+        return episodes
 
     def get_project(self, project_id) -> models.Project:
         ctx = self.user_context
@@ -196,6 +234,7 @@ class KitsuWriter(writers.AbstractWriter):
             thumbnailUrl=f"{self.kitsu_client.base_url}/pictures/thumbnails/projects/{project_from_context['id']}.png",
             fps=project_from_context['fps'],
             team=team,
+            episodes=self.get_episodes(project_from_context),
         )
 
     def get_project_assets(self, project) -> List[models.Asset]:
@@ -243,7 +282,7 @@ class KitsuWriter(writers.AbstractWriter):
 
         for s in r_shots.json():
             logging.debug(f"Processing shot {s['name']}")
-            if 'frame_in' not in s['data']:
+            if 'frame_in' not in s['data'] or not s['data']['frame_in']:
                 logging.debug("Skipping shot with no frame_in data")
                 continue
 
@@ -299,71 +338,66 @@ class KitsuWriter(writers.AbstractWriter):
 
         return shot_castings
 
-    def get_project_edit(self, project: models.Project):
-
-        logging.info(f"Getting edit for %s" % project.name)
+    def get_project_edits(self, project: models.Project):
+        logging.info(f"Getting edits for %s" % project.name)
         # Get first edit (if exists)
         r_edits = self.kitsu_client.get('/data/edits/with-tasks', params={'project_id': project.id})
-        edit = None
+        edits = []
         for e in r_edits.json():
             if e['canceled']:
                 continue
-            edit = e
-            # Break here, because we assume that the first edit is the one we need
-            # since we expect only one edit to exist.
-            break
-        if not edit:
-            return models.Edit(
-                project=project,
-                totalFrames=0,
-                frameOffset=0,
+            # Get preview-files from the first task found (usually only one)
+            r_previews = self.kitsu_client.get(f"/data/edits/{e['id']}/preview-files")
+            # Get the Edit task types (so we can identify the task of type "Edit")
+            r_task_types = self.kitsu_client.get(f"/data/edits/{e['id']}/task-types")
+            edit_task_id = None
+            for task_type in r_task_types.json():
+                if task_type['name'] != 'Edit':
+                    continue
+                # Save the edit task id, so we look it up when listing the preview-files
+                edit_task_id = task_type['id']
+            # Get the first preview (last revision)
+            latest_preview = None
+            for task_type_id, preview_list in r_previews.json().items():
+                if edit_task_id != task_type_id:
+                    continue
+                latest_preview = preview_list[0]
+                break
+
+            source_name = (
+                f"{self.kitsu_client.base_url}/movies/low/preview-files/{latest_preview['id']}.mp4"
             )
 
-        # Get preview-files from the first task found (usually only one)
-        r_previews = self.kitsu_client.get(f"/data/edits/{edit['id']}/preview-files")
-        # Get the Edit task types (so we can identify the task of type "Edit")
-        r_task_types = self.kitsu_client.get(f"/data/edits/{edit['id']}/task-types")
-        edit_task_id = None
-        for task_type in r_task_types.json():
-            if task_type['name'] != 'Edit':
-                continue
-            # Save the edit task id, so we look it up when listing the preview-files
-            edit_task_id = task_type['id']
-        # Get the first preview (last revision)
-        latest_preview = None
-        for task_type_id, preview_list in r_previews.json().items():
-            if edit_task_id != task_type_id:
-                continue
-            latest_preview = preview_list[0]
-            break
+            # Set frame offset from metadata
 
-        source_name = (
-            f"{self.kitsu_client.base_url}/movies/low/preview-files/{latest_preview['id']}.mp4"
-        )
+            frame_offset = 0
+            try:
+                frame_offset = int(e['data']['frame_start'])
+            except KeyError:
+                pass
 
-        # Set frame offset from metadata
-
-        frame_offset = 0
-        try:
-            frame_offset = int(edit['data']['frame_start'])
-        except KeyError:
-            pass
-
-        return models.Edit(
-            project=project,
-            frameOffset=frame_offset,
-            sourceName=source_name,
-        )
-
-    def __init__(self):
-        self.kitsu_client = KitsuClient()
-        self.user_context = self.kitsu_client.get('/data/user/context').json()
+            edits.append(
+                models.Edit(
+                    id=e['id'],
+                    name=e['name'],
+                    project_id=e['project_id'],
+                    totalFrames=0,
+                    frameOffset=frame_offset,
+                    sourceName=source_name,
+                    episode_id=None if not 'episode_id' in e else e['episode_id'],
+                )
+            )
+        return edits
 
     def write_project(self, project_id, destination_path):
         project_writer = self._get_project_writer(project_id, destination_path)
         project_writer.download_previews(self.request_headers)
-        project_writer.download_edit(self.request_headers)
+        project_writer.download_edits(self.request_headers)
         project_writer.write_as_json()
+
+    def __init__(self):
+        self.kitsu_client = KitsuClient()
+        self.user_context = self.kitsu_client.get('/data/user/context').json()
 
 
 def main(args):
