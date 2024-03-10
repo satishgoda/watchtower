@@ -36,9 +36,9 @@
           v-model='data.statusDispMode'
           :disabled='data.showStatuses === false'
           )
-          option(value='dots') Dots
-          option(value='stripes') Stripes
           option(value='rects') Heatmap
+          option(value='stripes') Stripes
+          option(value='dots') Dots
   canvas(
     id="canvas-thumb-grid"
     ref="canvasThumbGrid")
@@ -78,10 +78,10 @@ class Data {
   mode = 'shots';
   seqFilterMode = 'showAll';
   taskTypeFilter = '';
-  showAssignees = true;
+  showAssignees = false;
   showStatuses = true;
   displayMode = 'chronological';
-  statusDispMode = 'dots';
+  statusDispMode = 'rects';
   // Canvas & rendering context.
   canvas?: HTMLCanvasElement;
   canvasText?: HTMLCanvasElement;
