@@ -38,7 +38,6 @@
           li Tasks: {{ runtimeState.currentShot.tasks.length }}
   .row-timeline
     .col-12
-
       TimelineArea(
         @set-current-frame="setCurrentFrame"
         @set-timeline-visible-frames="setTimelineVisibleFrames"

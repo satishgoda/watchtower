@@ -26,7 +26,6 @@ export class DataProjectStore {
   episodes: Episode[] = [];
 }
 
-
 export class useProjectStore {
   data = reactive(new DataProjectStore());
 
