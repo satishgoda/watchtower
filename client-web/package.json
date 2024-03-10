@@ -24,7 +24,7 @@
     "pug": "3.0.2",
     "uirenderer-canvas": "1.1.1",
     "video.js": "^7.20.3",
-    "vue": "3.3.4",
+    "vue": "3.4.21",
     "vue-router": "4.2.4"
   },
   "devDependencies": {
