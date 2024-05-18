@@ -16,4 +16,9 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['uirenderer-canvas']
   },
+  define: {
+    // disable hydration mismatch details in production build
+    // Suppresses warning when using chartjs
+    __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false'
+  }
 })

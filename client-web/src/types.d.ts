@@ -104,3 +104,43 @@ type Edit = {
   sourceType: string;
   episodeId: string;
 }
+
+/* Types used when parsing task_counts.json */
+
+type TaskStatusCountSnapshot = {
+  timestamp: string;
+  count: number;
+}
+
+type TaskStatusCount = {
+  task_status_id: string;
+  data: TaskStatusCountSnapshot[];
+}
+
+type TaskTypeCount = {
+  task_type_id: string;
+  episode_id: string;
+  task_statuses: TaskStatusCount[];
+}
+
+/* Types used when building the data to use in Chartjs */
+
+type ParsedTaskCountSnapshot = {
+  x: string;
+  y: number;
+}
+
+type ParsedTaskStatusCountsDataset = {
+  label: string;
+  backgroundColor: string;
+  data: ParsedTaskCountSnapshot[];
+}
+
+type ParsedTaskTypeCountsChartData = {
+  datasets: ParsedTaskStatusCountsDataset[];
+}
+
+type ParsedTaskTypeCount = {
+  taskName: string;
+  chartData: ParsedTaskTypeCountsChartData;
+}

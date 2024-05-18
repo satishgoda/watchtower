@@ -5,6 +5,7 @@ enum UrlTypes {
   Shots,
   Assets,
   Casting,
+  TaskCounts,
 }
 
 export default {
@@ -32,6 +33,9 @@ export default {
 
       case UrlTypes.Casting:
         return `${basePath}data/projects/${projectId}/casting.json`;
+
+      case UrlTypes.TaskCounts:
+        return `${basePath}data/projects/${projectId}/task_counts.json`;
     }
   }
 }

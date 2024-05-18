@@ -1,4 +1,4 @@
-import type { vec4 } from 'uirenderer-canvas';
+import type {vec4} from 'uirenderer-canvas';
 
 const paletteDefault: vec4[] = [
   [0.8197601437568665, 0.7117544412612915, 0.5497459173202515, 1.0],
@@ -32,6 +32,19 @@ export default {
           g: number = parseInt(hex.slice(3, 5), 16) / 255,
           b: number = parseInt(hex.slice(5, 7), 16) / 255;
     return [r, g, b, 1.0]
+  },
+
+  RGBtoHex (r: number, g: number, b: number): string {
+    // Ensure RGB values are in the range [0, 1]
+    const toHex = (value: number) => {
+      return Math.round(value * 255).toString(16).padStart(2, '0');
+    }
+
+    const redHex = toHex(r);
+    const greenHex = toHex(g);
+    const blueHex = toHex(b);
+
+    return `#${redHex}${greenHex}${blueHex}`;
   },
 
   batchConvertColorHexToRGB (items: any) {

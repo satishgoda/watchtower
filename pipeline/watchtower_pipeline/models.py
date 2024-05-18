@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import logging
 import pathlib
@@ -297,3 +298,62 @@ class Project(StaticPreviewMixin, IdMixin):
     thumbnailUrl: Optional[str] = None
     fps: float = 24
     episodes: List[Episode] = field(default_factory=list)
+
+
+@dataclass
+class TaskStatusCountSnapshot:
+    timestamp: datetime
+    count: int
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "x": self.timestamp.isoformat(),
+            "y": self.count,
+        }
+
+
+@dataclass
+class TaskStatusCount:
+    task_status_id: uuid.UUID
+    data: List[TaskStatusCountSnapshot] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "task_status_id": self.task_status_id,
+            "data": [data.to_dict() for data in self.data],
+        }
+
+
+@dataclass
+class TaskCount(IdMixin):
+    """A time series of task status counts.
+
+    We group the counts by task type, and then by status. For example:
+    - task_type: animation
+    - episode: ep01
+    - task_statuses:
+        - task_status: done
+          data:
+            - timestamp: 2020-02-01
+              count: 10
+            - timestamp: 2020-02-02
+              count: 15
+        - task_status: other
+          data:
+            - timestamp: 2020-02-01
+              count: 16
+            - timestamp: 2020-02-02
+              count: 11
+
+    """
+
+    task_type_id: uuid.UUID
+    episode_id: Optional[str] = None
+    task_statuses: List[TaskStatusCount] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "task_type_id": self.task_type_id,
+            "episode_id": self.episode_id,
+            "task_statuses": [task_status.to_dict() for task_status in self.task_statuses],
+        }

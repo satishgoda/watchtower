@@ -4,7 +4,7 @@
   p Your projects:
   ul.projects-list(v-if='projects')
     li(v-for='project in projects' :key='project.id')
-      router-link(:to="{ name: 'pro', params: { projectId: project.id }}")
+      router-link(:to="{ name: 'project-overview', params: { projectId: project.id }}")
         img.project-thumbnail(:src='project.thumbnailUrl' :alt='project.name')
         h3 {{ project.name }}
 

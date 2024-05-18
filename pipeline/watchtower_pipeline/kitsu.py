@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+import datetime
+
+import json
 import logging
 import pathlib
 import requests
@@ -311,6 +314,10 @@ class KitsuWriter(writers.AbstractWriter):
             shots.append(shot)
         return shots
 
+    def get_task_count(self, project_id):
+        r_shots = self.kitsu_client.get('/data/shots/with-tasks', params={'project_id': project_id})
+        return writers.ProjectWriter.count_tasks(r_shots.json(), datetime.datetime.now())
+
     def get_project_casting(
         self,
         project,
@@ -389,14 +396,16 @@ class KitsuWriter(writers.AbstractWriter):
             )
         return edits
 
-    def write_project(self, project_id, destination_path):
-        project_writer = self._get_project_writer(project_id, destination_path)
-        project_writer.download_previews(self.request_headers)
-        project_writer.download_edits(self.request_headers)
-        project_writer.write_as_json()
+    # def write_project(self, project_id, destination_path):
+    #     project_writer = self._get_project_writer(project_id, destination_path)
+    #     # project_writer.download_previews(self.request_headers)
+    #     # project_writer.download_edits(self.request_headers)
+    #     current_task_count = self.get_task_count()
+    #     project_writer.merge_task_counts(current_task_count)
+    #     # project_writer.write_as_json()
 
-    def __init__(self):
-        self.kitsu_client = KitsuClient()
+    def __init__(self, kitsu_client: Optional[KitsuClient] = None):
+        self.kitsu_client = kitsu_client or KitsuClient()
         self.user_context = self.kitsu_client.get('/data/user/context').json()
 
 
@@ -405,12 +414,11 @@ def main(args):
     destination_path = parsed_args.destination_path
 
     kitsu_writer = KitsuWriter()
-
     if parsed_args.project_ids:
         for project_id in parsed_args.project_ids:
             kitsu_writer.write_project(project_id, destination_path)
     else:
-        kitsu_writer.write(destination_path)
+        kitsu_writer.write_all(destination_path)
         if parsed_args.bundle:
             writers.WatchtowerBundler.bundle(destination_path)
 

@@ -21,10 +21,14 @@
   },
   "dependencies": {
     "axios": "^1.1.2",
+    "chart.js": "^4.4.2",
+    "chartjs-adapter-date-fns": "^3.0.0",
+    "date-fns": "^3.4.0",
     "pug": "3.0.2",
     "uirenderer-canvas": "1.1.1",
     "video.js": "^7.20.3",
     "vue": "3.4.21",
+    "vue-chartjs": "^5.3.0",
     "vue-router": "4.2.4"
   },
   "devDependencies": {

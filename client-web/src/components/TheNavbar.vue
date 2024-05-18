@@ -1,43 +1,52 @@
 <template lang="pug">
 .app-toolbar
-  select(
-    v-if="projects"
-    v-show="router.currentRoute.value.name === 'pro'"
-    @change="switchToProject"
-    v-model="currentProjectSelected"
+  .project-selectors(
+      v-show="router.currentRoute.value.name === 'project-overview' || router.currentRoute.value.name === 'dashboard'"
     )
-    option(
-      v-for="project in projects"
-      :key="project.id"
-      :value="project.id"
+    select(
+      v-if="projects"
+      @change="switchToProject"
+      v-model="currentProjectSelected"
       )
-      | {{ project.name }}
-  select.episode(
-    v-if="episodes.length > 0"
-    @change="switchToEpisode"
-    v-model="currentEpisodeSelected"
-    )
-    option(
-      v-for="episode in episodes"
-      :key="episode.id"
-      :value="episode.id"
+      option(
+        v-for="project in projects"
+        :key="project.id"
+        :value="project.id"
+        )
+        | {{ project.name }}
+    select.episode(
+      v-if="episodes.length > 0"
+      @change="switchToEpisode"
+      v-model="currentEpisodeSelected"
       )
-      | {{ episode.name }}
+      option(
+        v-for="episode in episodes"
+        :key="episode.id"
+        :value="episode.id"
+        )
+        | {{ episode.name }}
+    select.view-type(
+      v-model="viewName"
+      @change="switchToView"
+      )
+      option(value="project-overview") Overview
+      option(value="dashboard") Dashboard
   .app-links
     ul
       li
-        RouterLink(to='/') Dashboard
+        RouterLink(to='/') Home
       li
         RouterLink(to='/about') About
 </template>
 
 <script setup lang="ts">
 
-import { RouterLink, useRouter } from 'vue-router';
+import {RouterLink, useRoute, useRouter} from 'vue-router';
 import {ref, watch} from 'vue';
 import type {EpisodeListItem, ProjectListItem} from '@/types.d.ts';
 
 const router = useRouter();
+const route = useRoute();
 const currentProjectSelected = ref();
 const currentEpisodeSelected = ref();
 const props = defineProps<{
@@ -52,6 +61,9 @@ const emit = defineEmits<{
   setActiveEpisodeId: [episodeId: string],
 }>()
 
+// Default value for view selector
+const viewName = ref('project-overview');
+
 
 watch(() => props.activeProjectId, (projectId) => {
   currentProjectSelected.value = projectId;
@@ -61,9 +73,16 @@ watch(() => props.activeEpisodeId, (episodeId) => {
   currentEpisodeSelected.value = episodeId;
 })
 
-function switchToProject(event: Event) {
+watch(
+  () => route.fullPath,
+  () => {
+    if (route.name) { viewName.value = route.name.toString(); }
+  }
+);
+
+async function switchToProject(event: Event) {
   const projectId = (event.target as HTMLInputElement).value;
-  router.push({ name: 'pro', params: { projectId: projectId } })
+  await router.push({ name: 'project-overview', params: { projectId: projectId } })
   emit('setActiveProjectId', projectId);
 }
 
@@ -72,6 +91,14 @@ function switchToEpisode(event: Event) {
   emit('setActiveEpisodeId', episodeId);
 }
 
+async function switchToView(event: Event) {
+  const viewName = (event.target as HTMLInputElement).value;
+  if (viewName === 'project-overview') {
+    await router.push({ name: 'project-overview', params: { projectId: currentProjectSelected.value}, query: {episodeId: currentEpisodeSelected.value } })
+  } else if (viewName === 'dashboard') {
+    await router.push({ name: 'dashboard', params: { projectId: currentProjectSelected.value }, query: {episodeId: currentEpisodeSelected.value } })
+  }
+}
 
 </script>
 
@@ -95,7 +122,8 @@ function switchToEpisode(event: Event) {
   color: var(--text-color-hint)
 }
 
-select.episode {
+select.episode,
+select.view-type {
   margin-left: 5px;
 }
 </style>

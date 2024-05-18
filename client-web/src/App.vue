@@ -34,7 +34,7 @@ function getDefaultEpisodeForProject(projectId: string) {
   return null;
 }
 
-function setActiveProjectId(projectId:string) {
+function setActiveProjectId(projectId: string) {
   projectsStore.data.activeProjectId = projectId;
   const firstEpisode = getDefaultEpisodeForProject(projectId);
   if (firstEpisode) {
@@ -42,7 +42,7 @@ function setActiveProjectId(projectId:string) {
   }
 }
 
-function setActiveEpisodeId(episodeId:string) {
+function setActiveEpisodeId(episodeId: string) {
   projectsStore.data.activeEpisodeId = episodeId;
   // Filter sequences based on episode
   // Filter shots based on episode sequences

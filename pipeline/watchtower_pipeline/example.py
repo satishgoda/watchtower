@@ -99,11 +99,15 @@ class ExampleWriter(writers.AbstractWriter):
             thumbnailUrl=None,
         )
 
-    def get_project_edit(self, project: models.Project) -> models.Edit:
+    def get_project_edits(self, project: models.Project) -> models.Edit:
         return models.Edit(
-            project=project,
+            id='edit-id',
+            name='Edit',
             totalFrames=self.frame_out,
             frameOffset=20,
+            project_id=project.id,
+            sourceName='',
+            episode_id=None,
         )
 
     def get_project_assets(self, project: models.Project) -> List[models.Asset]:
@@ -185,7 +189,7 @@ def main(args):
     parsed_args = argparser.parse_args(args)
     destination_path = parsed_args.destination_path
 
-    ExampleWriter().write(destination_path)
+    ExampleWriter().write_all(destination_path)
     if parsed_args.bundle:
         writers.WatchtowerBundler.bundle(destination_path)
 

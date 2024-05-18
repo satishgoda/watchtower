@@ -159,7 +159,7 @@ export class useProjectStore {
 
       for (const asset of this.data.assets) {
         asset.shot_ids = response.data
-          .filter((s: ShotCasting) => s.asset_ids.includes(asset.id))
+          .filter((s: ShotCasting) => {s.asset_ids && s.asset_ids.includes(asset.id)})
           .map((s: ShotCasting) => s.shot_id);
       }
 

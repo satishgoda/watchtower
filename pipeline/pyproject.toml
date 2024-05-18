@@ -14,7 +14,7 @@ tqdm = "^4.62.3"
 
 [tool.poetry.dev-dependencies]
 black = {version = "*", allow-prereleases = true}
-pytest = "^5.2"
+pytest = "^6"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

@@ -1,13 +1,13 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import DashboardView from '@/views/ProjectListView.vue'
+import ProjectListView from '@/views/ProjectListView.vue'
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'dashboard',
-      component: DashboardView
+      name: 'project-list',
+      component: ProjectListView
     },
     {
       path: '/about',
@@ -18,8 +18,15 @@ const router = createRouter({
       // non-repeatable, projectId param is `string`
       path: '/pro/:projectId',
       strict: true,
-      name: 'pro',
-      component: () => import('../views/ProjectDetailView.vue')
+      props: route => ({ episodeId: route.query['episode_id'] }),
+      name: 'project-overview',
+      component: () => import('../views/ProjectDetailView.vue'),
+    },
+    {
+      path: '/pro/:projectId/dashboard',
+      props: route => ({ episodeId: route.query['episode_id'] }),
+      name: 'dashboard',
+      component: () => import('../views/ProjectDashboardView.vue')
     }
   ]
 })
