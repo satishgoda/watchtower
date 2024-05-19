@@ -301,8 +301,8 @@ class AbstractWriter(AbstractProjectListWriter, AbstractProjectWriter, ABC):
 
     def write_all(self, destination_path: pathlib.Path):
         project_list_writer = self._get_project_list_writer(destination_path)
-        # project_list_writer.download_previews(self.request_headers)
-        # project_list_writer.write_as_json()
+        project_list_writer.download_previews(self.request_headers)
+        project_list_writer.write_as_json()
         for p in project_list_writer.projects:
             self.write_project(p.id, destination_path)
 
