@@ -45,10 +45,10 @@ const props = defineProps({
           {
             type: "time",
             stacked: true,
-            // time: {
-            //   round: true,
-            //   unit: 'day'
-            // }
+            time: {
+              round: true,
+              unit: 'day',
+            }
           }
       },
       elements: {

@@ -45,20 +45,37 @@ let parsedTaskTypeCounts = ref<ParsedTaskTypeCount[]>([]);
 
 /* Turn taskCounts into data for the charts */
 function parseTaskCounts() {
+  // Helper function to round up the date to the day
+  function roundToDay(dateString: string) {
+    // Create a Date object from the string
+    const date = new Date(dateString);
+    // Set hours, minutes, seconds, and milliseconds to zero to round down to the start of the day
+    date.setHours(0, 0, 0, 0);
+    // Return the ISO string representation of the date (only the date part)
+    return date.toISOString().split('T')[0];
+  }
+
   for (const taskTypeCount of taskTypeCounts.value ) {
     // Animation, Lighting, etc
     if (taskTypeCount.episode_id != episodeId) { continue }
     let datasets: ParsedTaskStatusCountsDataset[] = []
     for (const taskStatusCount of taskTypeCount.task_statuses) {
       // done, in_progress, etc
-      let data: ParsedTaskCountSnapshot[] = [];
+      // Create a map to store unique dates
+      const uniqueDates = new Map();
       for (const taskCountSnapshot of taskStatusCount.data) {
         // timestamp and count
-        data.push({
-          x: taskCountSnapshot.timestamp,
+        const dateString = taskCountSnapshot.timestamp;
+        const roundedDate = roundToDay(dateString);
+
+        // Store the rounded date in the map, which will automatically handle duplicates
+        uniqueDates.set(roundedDate.split('T')[0], {
+          x: roundedDate,
           y: taskCountSnapshot.count
-        })
+        });
       }
+      // Create a new array with the values from the map
+      const data: ParsedTaskCountSnapshot[] = Array.from(uniqueDates.values());
 
       const taskStatus = projectStore.data.taskStatuses.find(t => t.id === taskStatusCount.task_status_id)
       datasets.push({
