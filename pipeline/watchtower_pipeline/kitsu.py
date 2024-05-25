@@ -151,6 +151,17 @@ class KitsuWriter(writers.AbstractWriter):
         return episodes
 
     def get_project(self, project_id) -> models.Project:
+        def get_sorted_ids(task_types_priority):
+            # Create a list of tuples (id, priority) and sort it by priority, handling None as the lowest priority
+            sorted_items = sorted(
+                task_types_priority.items(), key=lambda item: (item[1] is None, item[1])
+            )
+
+            # Extract the sorted ids
+            sorted_ids = [item[0] for item in sorted_items]
+
+            return sorted_ids
+
         ctx = self.user_context
         # Get the project from the contex
         project_from_context = next(
@@ -176,15 +187,17 @@ class KitsuWriter(writers.AbstractWriter):
         ]
         # Filter task_types for project. If the project does not explicitly specify 'task_types'
         # we use the ones from the context
+        filtered_task_types = []
         if 'task_types' not in project_from_context:
             filtered_task_types = ctx['task_types']
         else:
-            filtered_task_types = [
-                item
-                for item in ctx['task_types']
-                if item['id'] in project_from_context['task_types']
-            ]
-
+            task_type_ids = project_from_context['task_types']
+            if 'task_types_priority' in project_from_context:
+                task_type_ids = get_sorted_ids(project_from_context['task_types_priority'])
+            for task_type_id in task_type_ids:
+                task_type = next(filter(lambda t: t['id'] == task_type_id, ctx['task_types']), None)
+                if task_type:
+                    filtered_task_types.append(task_type)
         task_types = [
             models.TaskType(
                 name=item['name'],

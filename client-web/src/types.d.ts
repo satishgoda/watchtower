@@ -141,6 +141,7 @@ type ParsedTaskTypeCountsChartData = {
 }
 
 type ParsedTaskTypeCount = {
-  taskName: string;
+  name: string;
+  id: string;
   chartData: ParsedTaskTypeCountsChartData;
 }

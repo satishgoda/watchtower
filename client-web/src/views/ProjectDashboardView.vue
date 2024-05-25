@@ -3,8 +3,8 @@
   .chart(v-for="(t, id) in parsedTaskTypeCounts" :key="id")
     BarChart(
       :chart-data="t.chartData"
-      :chart-title="t.taskName"
-     style="position: relative; height:20vh; width:100%"
+      :chart-title="t.name"
+     style="position: relative; height:18vh; width:100%"
   )
 
 </template>
@@ -42,6 +42,23 @@ const props = defineProps<{
 const loaded = ref(false);
 let taskTypeCounts = ref<TaskTypeCount[]>([]);
 let parsedTaskTypeCounts = ref<ParsedTaskTypeCount[]>([]);
+
+function sortTaskTypes(tasks_types_to_sort: ParsedTaskTypeCount[]) {
+  // Create a map from task_types for easy lookup of order
+  const orderMap = new Map();
+  projectStore.data.taskTypes.forEach((task, index) => {
+    orderMap.set(task.id, index);
+  });
+
+  // Sort the tasks_types_to_sort array based on the order in orderMap
+  tasks_types_to_sort.sort((a: ParsedTaskTypeCount, b: ParsedTaskTypeCount) => {
+    const orderA = orderMap.get(a.id);
+    const orderB = orderMap.get(b.id);
+    return orderA - orderB;
+  });
+
+  return tasks_types_to_sort;
+}
 
 /* Turn taskCounts into data for the charts */
 function parseTaskCounts() {
@@ -87,11 +104,19 @@ function parseTaskCounts() {
     }
 
     const taskType = projectStore.data.taskTypes.find(t => t.id === taskTypeCount.task_type_id)
+    if (!taskType) {
+      console.error(`Missing task type id: ${taskTypeCount.task_type_id}`)
+      continue
+    }
     parsedTaskTypeCounts.value.push({
-      taskName: taskType?.name ?? 'Undefined',
+      id: taskType.id,
+      name: taskType.name,
       chartData: {datasets: datasets},
     })
   }
+
+  parsedTaskTypeCounts.value = sortTaskTypes(parsedTaskTypeCounts.value);
+
 }
 
 
