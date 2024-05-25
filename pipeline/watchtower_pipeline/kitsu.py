@@ -371,6 +371,9 @@ class KitsuWriter(writers.AbstractWriter):
                 latest_preview = preview_list[0]
                 break
 
+            if not latest_preview:
+                continue
+
             source_name = (
                 f"{self.kitsu_client.base_url}/movies/low/preview-files/{latest_preview['id']}.mp4"
             )
