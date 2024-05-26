@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "watchtower-pipeline"
-version = "1.0.0-beta2"
+version = "1.0.0-beta3"
 description = "Utilities to generate static data for Watchtower."
 authors = ["Francesco Siddi <francesco@blender.org>"]
 license = "GPL-3.0-or-later"
