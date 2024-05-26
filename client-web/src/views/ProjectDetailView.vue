@@ -46,42 +46,36 @@
         :project-store="projectStore.data"
         )
 
-
-
 </template>
 
 <script setup lang="ts">
 import {onMounted, onBeforeUnmount, computed, reactive, watch} from 'vue';
-import { useRoute } from 'vue-router';
-import { useProjectStore } from '@/stores/project';
-import { RuntimeState } from '@/stores/runtimeState';
-import type {Asset, Episode} from '@/types.d.ts';
+import {RuntimeState} from '@/stores/runtimeState';
+import type {Asset, EpisodeListItem, ProjectListItem} from '@/types.d.ts';
 import ThumbnailArea from '@/components/ThumbnailArea.vue';
 import VideoPlayer from '@/components/VideoPlayer.vue';
 import TimelineArea from '@/components/TimelineArea.vue';
+import {useProjectStore} from '@/stores/project';
+import type {RuntimeStateNavigation} from '@/stores/runtimeStateNavigation';
+import {useRoute, useRouter} from 'vue-router';
 
 const projectStore = new useProjectStore();
-const route = useRoute();
-const projectId = route.params['projectId'] as string;
-projectStore.initWithProject(projectId);
-
-const emit = defineEmits<{
-  setActiveProjectId: [projectId: string]
-}>()
 
 const props = defineProps<{
-  activeProjectId: string;
-  activeEpisodeId: string;
+  runtimeStateNavigation: RuntimeStateNavigation
+  projects: ProjectListItem[]
 }>()
 
-emit('setActiveProjectId', projectId)
+const emit = defineEmits<{
+  setRuntimeStateNavigation: [runtimeStateNavigation: RuntimeStateNavigation]
+}>()
+
+const route = useRoute();
+const router = useRouter();
+
 
 // Runtime state
 const runtimeState = reactive(new RuntimeState());
-
-function setSelectedEpisode(episode: Episode) {
-  runtimeState.selectedEpisode = episode;
-}
 
 function setCurrentFrame(frameNumber: string|number) {
   // Force frameNumber to be int. Since it comes from JSON metadata it could have
@@ -152,10 +146,63 @@ const cssTimelineHeight = computed(() => {
   return `${runtimeState.timelineCanvasHeightPx + 33}px`
 })
 
+const initProject = async (projectId: string, episodeId?: string) => {
+  let episodes: EpisodeListItem[] = [];
+  const project = props.projects.find(project => project.id === projectId);
+  if (!project) {return}
+
+  // If the project has episodes, default to the first one
+  if (project.episodes.length > 0) {
+    episodes = project.episodes;
+    if (!episodeId) {
+      episodeId = project.episodes[0].id;
+      // Update route to feature the default episodeId
+    }
+    await router.push({
+      name: 'project-overview',
+      params: { projectId: projectId },
+      query: {episodeId: episodeId }
+    })
+  }
+  await projectStore.initWithProject(
+    projectId,
+    episodeId
+  );
+
+  // Build a RuntimeStateNavigation to send out as signal 
+  const state: RuntimeStateNavigation = {
+      activeProjectId: projectId,
+      activeEpisodeId: episodeId,
+      episodes: episodes,
+    }
+
+  return state
+
+}
+
+const initProjectAndSetRuntimeStateNavigation = async () => {
+  // Init the project using data from the route
+  const projectId = route.params['projectId'] as string;
+  const episodeId = route.query['episodeId'] as string;
+  await initProject(projectId, episodeId).then((state: RuntimeStateNavigation | undefined) => {
+    if (!state) {return}
+    // Send a signal out to update the navbar
+    emit('setRuntimeStateNavigation', state);
+  })
+}
+
+// On first page load
+onMounted(initProjectAndSetRuntimeStateNavigation);
 
 // Watchers
-watch(() => props.activeProjectId, (projectId) => {projectStore.initWithProject(projectId)})
-watch(() => props.activeEpisodeId, (episodeId) => {projectStore.initWithEpisode(episodeId)})
+watch(() => props.runtimeStateNavigation, async (rts) => {
+  const projectId = route.params['projectId'] as string;
+  const episodeId = route.query['episodeId'] as string;
+  if (props.runtimeStateNavigation.activeEpisodeId === episodeId &&
+    props.runtimeStateNavigation.activeProjectId === projectId) {return}
+  await initProject(rts.activeProjectId, rts.activeEpisodeId)
+})
+
 
 </script>
 

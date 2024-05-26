@@ -11,8 +11,8 @@
 
 <script setup lang="ts">
 
-import {ref, onMounted } from 'vue';
-import {useRoute} from 'vue-router';
+import {ref, onMounted, watch} from 'vue';
+import {useRoute, useRouter} from 'vue-router';
 import BarChart from '@/components/BarChart.vue';
 import dataUrls from '@/lib/dataurls';
 import colors from '@/lib/colors';
@@ -20,23 +20,23 @@ import type {
   ParsedTaskStatusCountsDataset,
   ParsedTaskTypeCount,
   ParsedTaskCountSnapshot,
-  TaskTypeCount,
+  TaskTypeCount, ProjectListItem, EpisodeListItem,
 } from '@/types.d.ts';
 import {useProjectStore} from '@/stores/project';
+import type {RuntimeStateNavigation} from '@/stores/runtimeStateNavigation';
 
 
 const projectStore = new useProjectStore();
 const route = useRoute();
-const projectId = route.params['projectId'] as string;
-const episodeId = route.query['episodeId'] as string;
+const router = useRouter();
 
 const emit = defineEmits<{
-  setActiveProjectId: [projectId: string]
+  setRuntimeStateNavigation: [runtimeStateNavigation: RuntimeStateNavigation]
 }>()
 
 const props = defineProps<{
-  activeProjectId: string;
-  activeEpisodeId: string;
+  runtimeStateNavigation: RuntimeStateNavigation
+  projects: ProjectListItem[]
 }>()
 
 const loaded = ref(false);
@@ -61,7 +61,7 @@ function sortTaskTypes(tasks_types_to_sort: ParsedTaskTypeCount[]) {
 }
 
 /* Turn taskCounts into data for the charts */
-function parseTaskCounts() {
+function parseTaskCounts(episodeId?: string) {
   // Helper function to round up the date to the day
   function roundToDay(dateString: string) {
     // Create a Date object from the string
@@ -72,6 +72,8 @@ function parseTaskCounts() {
     return date.toISOString().split('T')[0];
   }
 
+  // Reset parsedTaskTypesCount content
+  parsedTaskTypeCounts.value = [];
   for (const taskTypeCount of taskTypeCounts.value ) {
     // Animation, Lighting, etc
     if (taskTypeCount.episode_id != episodeId) { continue }
@@ -119,38 +121,79 @@ function parseTaskCounts() {
 
 }
 
-
-const fetchTaskCounts = async () => {
+const fetchTaskCounts = async (projectId: string, episodeId?: string) => {
   const url = dataUrls.getUrl(dataUrls.urlType.TaskCounts, projectId);
   await fetch(url)
     .then(response => response.json())
     .then(data => {
       taskTypeCounts.value = data;
-      parseTaskCounts();
+      parseTaskCounts(episodeId);
       loaded.value = true
     })
 
 };
 
-const initProject = async () => {
-  await projectStore.initWithProject(projectId).then(fetchTaskCounts);
+// TODO: de-duplicate with ProjectDetailView
+const initProject = async (projectId: string, episodeId?: string) => {
+  let episodes: EpisodeListItem[] = [];
+  const project = props.projects.find(project => project.id === projectId);
+  if (!project) {return}
+
+  // If the project has episodes, default to the first one
+  if (project.episodes.length > 0) {
+    episodes = project.episodes;
+    if (!episodeId) {
+      episodeId = project.episodes[0].id;
+      // Update route to feature the default episodeId
+    }
+    // TODO: handle this as the only difference with ProjectDetailView
+    await router.push({
+      name: 'dashboard',
+      params: { projectId: projectId },
+      query: { episodeId: episodeId }
+    })
+  }
+  await projectStore.initWithProject(
+    projectId,
+    episodeId
+  ).then(async () => {
+    await fetchTaskCounts(projectId, episodeId)
+  });
+
+  const state: RuntimeStateNavigation = {
+      activeProjectId: projectId,
+      activeEpisodeId: episodeId,
+      episodes: episodes,
+    }
+
+  return state
 }
 
-onMounted(initProject);
+const initProjectAndSetRuntimeStateNavigation = async () => {
+  const projectId = route.params['projectId'] as string;
+  const episodeId = route.query['episodeId'] as string;
+  await initProject(projectId, episodeId).then((state: RuntimeStateNavigation | undefined) => {
+    if (!state) {return}
+    emit('setRuntimeStateNavigation', state);
+  })
+}
 
-// const chartData = reactive({
-//   labels: ['January', 'February', 'March', 'A'],
-//   datasets: [{ data: [40, 20, 12, 150] }]
-// })
+onMounted(initProjectAndSetRuntimeStateNavigation);
 
-emit('setActiveProjectId', projectId)
+// Watchers
+watch(() => props.runtimeStateNavigation, async (rts) => {
+  const projectId = route.params['projectId'] as string;
+  const episodeId = route.query['episodeId'] as string;
+  if (props.runtimeStateNavigation.activeEpisodeId === episodeId &&
+    props.runtimeStateNavigation.activeProjectId === projectId) {return}
+  await initProject(rts.activeProjectId, rts.activeEpisodeId)
+})
+
 </script>
 
 <style scoped>
 
 .dashboard {
-
-
   margin: var(--spacer-3) auto;
   width: 100%;
   display: flex;

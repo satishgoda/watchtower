@@ -1,51 +1,38 @@
 <template lang="pug">
 .app-container
   TheNavbar(
-    @set-active-project-id="setActiveProjectId"
-    @set-active-episode-id="setActiveEpisodeId"
+    @set-runtime-state-navigation="setRuntimeStateNavigation"
     :projects="projectsStore.data.projects"
-    :episodes="projectsStore.data.episodes"
-    :active-project-id="projectsStore.data.activeProjectId"
-    :active-episode-id="projectsStore.data.activeEpisodeId"
+    :runtime-state-navigation="runtimeStateNavigation"
     )
   RouterView(
-    @set-active-project-id="setActiveProjectId"
+    @set-runtime-state-navigation="setRuntimeStateNavigation"
     :projects="projectsStore.data.projects"
-    :active-project-id="projectsStore.data.activeProjectId"
-    :active-episode-id="projectsStore.data.activeEpisodeId"
+    :runtime-state-navigation="runtimeStateNavigation"
     )
 </template>
 
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
+import {RouterView} from 'vue-router'
 import { useProjectsStore } from "@/stores/projects";
 import TheNavbar from "@/components/TheNavbar.vue";
+import {onMounted, ref} from 'vue';
+import {RuntimeStateNavigation} from '@/stores/runtimeStateNavigation';
+
 
 const projectsStore = new useProjectsStore();
-projectsStore.fetchAndInitContext();
 
-function getDefaultEpisodeForProject(projectId: string) {
-  const project = projectsStore.data.projects.find(project => project.id === projectId);
-  if (!project) {return}
-  if (project.episodes.length > 0) {
-    projectsStore.data.episodes = project.episodes
-    return project.episodes[0];
-  }
-  return null;
+// Navigation runtime state
+const runtimeStateNavigation = ref(new RuntimeStateNavigation());
+
+function setRuntimeStateNavigation(state: RuntimeStateNavigation) {
+  runtimeStateNavigation.value = state;
 }
 
-function setActiveProjectId(projectId: string) {
-  projectsStore.data.activeProjectId = projectId;
-  const firstEpisode = getDefaultEpisodeForProject(projectId);
-  if (firstEpisode) {
-    setActiveEpisodeId(firstEpisode.id)
-  }
+const initContext = async () => {
+  await projectsStore.fetchAndInitContext();
 }
 
-function setActiveEpisodeId(episodeId: string) {
-  projectsStore.data.activeEpisodeId = episodeId;
-  // Filter sequences based on episode
-  // Filter shots based on episode sequences
-}
+onMounted(() => initContext());
 
 </script>

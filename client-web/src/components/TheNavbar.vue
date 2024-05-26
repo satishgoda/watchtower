@@ -15,12 +15,12 @@
         )
         | {{ project.name }}
     select.episode(
-      v-if="episodes.length > 0"
+      v-if="runtimeStateNavigation.episodes.length > 0"
       @change="switchToEpisode"
       v-model="currentEpisodeSelected"
       )
       option(
-        v-for="episode in episodes"
+        v-for="episode in runtimeStateNavigation.episodes"
         :key="episode.id"
         :value="episode.id"
         )
@@ -43,35 +43,31 @@
 
 import {RouterLink, useRoute, useRouter} from 'vue-router';
 import {ref, watch} from 'vue';
-import type {EpisodeListItem, ProjectListItem} from '@/types.d.ts';
+import type {ProjectListItem} from '@/types.d.ts';
+import type {RuntimeStateNavigation} from '@/stores/runtimeStateNavigation';
 
 const router = useRouter();
 const route = useRoute();
-const currentProjectSelected = ref();
-const currentEpisodeSelected = ref();
+
 const props = defineProps<{
   projects: ProjectListItem[],
-  episodes: EpisodeListItem[],
-  activeProjectId: "",
-  activeEpisodeId: "",
+  runtimeStateNavigation: RuntimeStateNavigation
 }>()
 
 const emit = defineEmits<{
-  setActiveProjectId: [projectId: string],
-  setActiveEpisodeId: [episodeId: string],
+  setRuntimeStateNavigation: [runtimeStateNavigation: RuntimeStateNavigation]
 }>()
+
+const currentProjectSelected = ref(props.runtimeStateNavigation.activeProjectId);
+const currentEpisodeSelected = ref(props.runtimeStateNavigation.activeEpisodeId);
 
 // Default value for view selector
 const viewName = ref('project-overview');
 
-
-watch(() => props.activeProjectId, (projectId) => {
-  currentProjectSelected.value = projectId;
-})
-
-watch(() => props.activeEpisodeId, (episodeId) => {
-  currentEpisodeSelected.value = episodeId;
-})
+watch(() => props.runtimeStateNavigation, (rts) => {
+  currentProjectSelected.value = rts.activeProjectId;
+  currentEpisodeSelected.value = rts.activeEpisodeId;
+}, {deep: true})
 
 watch(
   () => route.fullPath,
@@ -82,21 +78,51 @@ watch(
 
 async function switchToProject(event: Event) {
   const projectId = (event.target as HTMLInputElement).value;
-  await router.push({ name: 'project-overview', params: { projectId: projectId } })
-  emit('setActiveProjectId', projectId);
+  const episodeId = props.runtimeStateNavigation.activeEpisodeId;
+  const payload: RuntimeStateNavigation = {
+    activeProjectId: projectId,
+    activeEpisodeId: episodeId,
+    episodes: props.runtimeStateNavigation.episodes,
+  }
+  emit('setRuntimeStateNavigation', payload);
+  if (!episodeId) {
+    await router.push({
+      name: 'project-overview',
+      params: { projectId: projectId }
+    })
+  } else {
+    await router.push({
+      name: 'project-overview',
+      params: { projectId: projectId },
+      query: { episodeId: episodeId }
+    })
+  }
 }
 
 function switchToEpisode(event: Event) {
   const episodeId = (event.target as HTMLInputElement).value;
-  emit('setActiveEpisodeId', episodeId);
+  const payload: RuntimeStateNavigation = {
+    activeProjectId: currentProjectSelected.value,
+    activeEpisodeId: episodeId,
+    episodes: props.runtimeStateNavigation.episodes,
+  }
+  emit('setRuntimeStateNavigation', payload);
 }
 
 async function switchToView(event: Event) {
   const viewName = (event.target as HTMLInputElement).value;
   if (viewName === 'project-overview') {
-    await router.push({ name: 'project-overview', params: { projectId: currentProjectSelected.value}, query: {episodeId: currentEpisodeSelected.value } })
+    await router.push({
+      name: 'project-overview',
+      params: { projectId: currentProjectSelected.value },
+      query: { episodeId: currentEpisodeSelected.value }
+    })
   } else if (viewName === 'dashboard') {
-    await router.push({ name: 'dashboard', params: { projectId: currentProjectSelected.value }, query: {episodeId: currentEpisodeSelected.value } })
+    await router.push({
+      name: 'dashboard',
+      params: { projectId: currentProjectSelected.value },
+      query: {episodeId: currentEpisodeSelected.value }
+    })
   }
 }
 

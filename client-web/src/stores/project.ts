@@ -219,22 +219,16 @@ export class useProjectStore {
       console.log(error);
     }
   }
-  async initWithProject(projectId: string) {
+  async initWithProject(projectId: string, episodeId?: string) {
     try {
       await this.fetchProjectData(projectId);
-      await this.fetchProjectShots(projectId);
+      await this.fetchProjectShots(projectId, episodeId);
       await this.fetchProjectAssets(projectId);
-      await this.fetchProjectSequences(projectId);
+      await this.fetchProjectSequences(projectId, episodeId);
       await this.fetchProjectCasting(projectId)
-      await this.fetchEditData(projectId);
+      await this.fetchEditData(projectId, episodeId);
     } catch (error) {
       console.log(error)
     }
-  }
-  async initWithEpisode(episodeId: string) {
-    if (!this.data.id) {return}
-    await this.fetchProjectSequences(this.data.id, episodeId);
-    await this.fetchProjectShots(this.data.id, episodeId);
-    await this.fetchEditData(this.data.id, episodeId);
   }
 }
