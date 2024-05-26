@@ -169,7 +169,7 @@ const initProject = async (projectId: string, episodeId?: string) => {
     episodeId
   );
 
-  // Build a RuntimeStateNavigation to send out as signal 
+  // Build a RuntimeStateNavigation to send out as signal
   const state: RuntimeStateNavigation = {
       activeProjectId: projectId,
       activeEpisodeId: episodeId,
