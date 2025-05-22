@@ -1,3 +1,5 @@
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/satishgoda/watchtower)
+
 # Watchtower
 
 Interactive film production management tool. Watchtower allows you to see the big picture of a 
